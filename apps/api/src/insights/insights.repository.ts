@@ -210,7 +210,11 @@ export class InsightsRepository {
       activeWithoutCompensation: counts.active_missing,
       inactiveWithCurrentCompensation: counts.inactive_paid,
       outlierCount: outliers.rows[0]?.total ?? 0,
-      outlierMeta: { page: request.page, limit: request.limit, total: outliers.rows[0]?.total ?? 0 },
+      outlierMeta: {
+        page: request.page,
+        limit: request.limit,
+        total: outliers.rows[0]?.total ?? 0,
+      },
       outliers: outliers.rows.map((row) => ({
         employeeId: row.employee_id,
         employeeNumber: row.employee_number,
