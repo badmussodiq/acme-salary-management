@@ -1,45 +1,17 @@
-export const COUNTRIES = [
-  { code: 'NG', name: 'Nigeria' },
-  { code: 'GH', name: 'Ghana' },
-  { code: 'KE', name: 'Kenya' },
-  { code: 'ZA', name: 'South Africa' },
-  { code: 'EG', name: 'Egypt' },
-  { code: 'US', name: 'United States' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'IN', name: 'India' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'AE', name: 'United Arab Emirates' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'BR', name: 'Brazil' },
-  { code: 'JP', name: 'Japan' },
-] as const;
+import { COUNTRIES, CURRENCY_CODES, CURRENCY_NAMES } from './world.generated';
+
+export { COUNTRIES, CURRENCY_CODES, CURRENCY_NAMES };
 
 export type CountryCode = (typeof COUNTRIES)[number]['code'];
+export type CurrencyCode = (typeof CURRENCY_CODES)[number];
 
 export const COUNTRY_CODES: readonly CountryCode[] = COUNTRIES.map((country) => country.code);
 
-export const CURRENCY_CODES = [
-  'NGN',
-  'GHS',
-  'KES',
-  'ZAR',
-  'EGP',
-  'USD',
-  'CAD',
-  'GBP',
-  'EUR',
-  'INR',
-  'SGD',
-  'AED',
-  'AUD',
-  'BRL',
-  'JPY',
-] as const;
-
-export type CurrencyCode = (typeof CURRENCY_CODES)[number];
+export const currencyOfCountry = (code: CountryCode): CurrencyCode => {
+  const country = COUNTRIES.find((entry) => entry.code === code);
+  if (!country) throw new Error(`Unknown country ${code}`);
+  return country.currency;
+};
 
 export const PAY_FREQUENCIES = ['annual', 'monthly', 'hourly'] as const;
 export type PayFrequency = (typeof PAY_FREQUENCIES)[number];

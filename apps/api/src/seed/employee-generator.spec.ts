@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COUNTRY_CODES, CURRENCY_CODES } from '@acme/contracts';
+import { COUNTRY_CODES, CURRENCY_CODES, currencyOfCountry } from '@acme/contracts';
 import { isCalendarDate, isPositiveMoney } from '../common/validators';
 import { DEFAULT_SEED, generateEmployees, SEED_EMAIL_DOMAIN } from './employee-generator';
 import { createRandom, deterministicUuid } from './random';
@@ -78,6 +78,29 @@ describe('generateEmployees', () => {
     expect(departments.size).toBe(10);
     expect(titles.size).toBeGreaterThanOrEqual(25);
     expect(currencies.size).toBe(new Set(CURRENCY_CODES).size);
+  });
+
+  it('gives every country a fitting headcount, larger where the population and economy are larger', () => {
+    const headcount = new Map<string, number>();
+    for (const employee of employees) {
+      headcount.set(employee.countryCode, (headcount.get(employee.countryCode) ?? 0) + 1);
+    }
+    const sizes = [...headcount.values()];
+
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(3);
+    expect(headcount.get('IN') ?? 0).toBeGreaterThan(headcount.get('NG') ?? 0);
+    expect(headcount.get('US') ?? 0).toBeGreaterThan(headcount.get('GH') ?? 0);
+    expect(headcount.get('NG') ?? 0).toBeGreaterThan(headcount.get('TV') ?? 0);
+  });
+
+  it('pays most people in their own currency', () => {
+    const local = employees.filter((employee) =>
+      employee.compensations.every(
+        (pay) => pay.currencyCode === currencyOfCountry(employee.countryCode),
+      ),
+    );
+
+    expect(local.length / employees.length).toBeGreaterThan(0.85);
   });
 
   it('keeps country and pay currency separate for some employees', () => {
