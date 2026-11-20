@@ -1,4 +1,5 @@
 # ACME Salary Management Platform
+
 ## Engineering Approach, Product Requirements & Delivery Plan
 
 **Assessment:** Incubyte — Software Craftsperson / Node / React / TypeScript II  
@@ -95,16 +96,16 @@ Provide a dashboard and filterable summaries that answer questions such as:
 
 ### Deliberately out of scope
 
-| Excluded feature | Reason |
-|---|---|
-| Payroll execution and payslip generation | The brief asks for salary management, not payroll processing or payment integration. |
-| Tax, pension and statutory deductions | These introduce country-specific legal rules beyond the assessment's core problem. |
-| Foreign-exchange conversion | Requires an exchange-rate provider, rate-date policy and financial accuracy controls. |
-| Employee self-service portal | The stated persona is the HR manager. |
-| Multiple approval workflows | Valuable in a larger HR product, but not necessary to demonstrate the core workflow. |
-| Recruitment, attendance and leave management | Outside salary administration. |
-| Microservices and message brokers | Unnecessary operational complexity for a single-user-focused assessment. |
-| Advanced BI and custom report builder | A small set of reliable, useful salary insights is sufficient. |
+| Excluded feature                             | Reason                                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Payroll execution and payslip generation     | The brief asks for salary management, not payroll processing or payment integration.  |
+| Tax, pension and statutory deductions        | These introduce country-specific legal rules beyond the assessment's core problem.    |
+| Foreign-exchange conversion                  | Requires an exchange-rate provider, rate-date policy and financial accuracy controls. |
+| Employee self-service portal                 | The stated persona is the HR manager.                                                 |
+| Multiple approval workflows                  | Valuable in a larger HR product, but not necessary to demonstrate the core workflow.  |
+| Recruitment, attendance and leave management | Outside salary administration.                                                        |
+| Microservices and message brokers            | Unnecessary operational complexity for a single-user-focused assessment.              |
+| Advanced BI and custom report builder        | A small set of reliable, useful salary insights is sufficient.                        |
 
 ### Success criteria
 
@@ -154,15 +155,15 @@ flowchart TD
 
 ### Backend modules
 
-| Module | Responsibility |
-|---|---|
-| Authentication | Sign-in, session/token validation and identity context. |
-| Users / Access | HR-manager access and authorization checks. |
-| Employees | Employee identity, employment details, search and filtering. |
-| Compensation | Salary records, validation, effective dates and current compensation rules. |
-| Insights | Aggregations and summaries used by the dashboard. |
-| Audit | Immutable records of salary-related changes. |
-| Health | Readiness and liveness endpoints for deployment checks. |
+| Module         | Responsibility                                                              |
+| -------------- | --------------------------------------------------------------------------- |
+| Authentication | Sign-in, session/token validation and identity context.                     |
+| Users / Access | HR-manager access and authorization checks.                                 |
+| Employees      | Employee identity, employment details, search and filtering.                |
+| Compensation   | Salary records, validation, effective dates and current compensation rules. |
+| Insights       | Aggregations and summaries used by the dashboard.                           |
+| Audit          | Immutable records of salary-related changes.                                |
+| Health         | Readiness and liveness endpoints for deployment checks.                     |
 
 Modules should communicate through clear service interfaces. Avoid circular dependencies and avoid placing business logic in controllers.
 
@@ -181,6 +182,7 @@ Use server rendering for the initial page experience and server-side data loadin
 ### Data model — conceptual
 
 **Employee**
+
 - id
 - employee_number (unique)
 - first_name
@@ -194,6 +196,7 @@ Use server rendering for the initial page experience and server-side data loadin
 - updated_at
 
 **Compensation**
+
 - id
 - employee_id
 - amount
@@ -205,6 +208,7 @@ Use server rendering for the initial page experience and server-side data loadin
 - updated_at
 
 **User**
+
 - id
 - email
 - password_hash or external identity reference
@@ -213,6 +217,7 @@ Use server rendering for the initial page experience and server-side data loadin
 - created_at
 
 **AuditEvent**
+
 - id
 - actor_user_id
 - employee_id
@@ -232,20 +237,20 @@ Do not store calculated dashboard totals as primary employee data. Derive them f
 
 Use versioned REST endpoints, consistent response shapes, validation and appropriate HTTP status codes.
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/api/v1/auth/login` | Authenticate HR manager |
-| GET | `/api/v1/employees` | Search, filter, sort and paginate employees |
-| POST | `/api/v1/employees` | Create employee and initial compensation |
-| GET | `/api/v1/employees/:id` | Retrieve employee details |
-| PATCH | `/api/v1/employees/:id` | Update permitted employee details |
-| GET | `/api/v1/employees/:id/compensation` | Retrieve compensation history |
-| POST | `/api/v1/employees/:id/compensation` | Add a compensation record |
-| GET | `/api/v1/employees/:id/audit` | Retrieve relevant audit history |
-| GET | `/api/v1/insights/overview` | Dashboard summary |
-| GET | `/api/v1/insights/salary-distribution` | Salary summaries by selected dimensions |
-| GET | `/api/v1/health/live` | Liveness check |
-| GET | `/api/v1/health/ready` | Database/dependency readiness check |
+| Method | Endpoint                               | Purpose                                     |
+| ------ | -------------------------------------- | ------------------------------------------- |
+| POST   | `/api/v1/auth/login`                   | Authenticate HR manager                     |
+| GET    | `/api/v1/employees`                    | Search, filter, sort and paginate employees |
+| POST   | `/api/v1/employees`                    | Create employee and initial compensation    |
+| GET    | `/api/v1/employees/:id`                | Retrieve employee details                   |
+| PATCH  | `/api/v1/employees/:id`                | Update permitted employee details           |
+| GET    | `/api/v1/employees/:id/compensation`   | Retrieve compensation history               |
+| POST   | `/api/v1/employees/:id/compensation`   | Add a compensation record                   |
+| GET    | `/api/v1/employees/:id/audit`          | Retrieve relevant audit history             |
+| GET    | `/api/v1/insights/overview`            | Dashboard summary                           |
+| GET    | `/api/v1/insights/salary-distribution` | Salary summaries by selected dimensions     |
+| GET    | `/api/v1/health/live`                  | Liveness check                              |
+| GET    | `/api/v1/health/ready`                 | Database/dependency readiness check         |
 
 ### API standards
 
@@ -295,29 +300,29 @@ Salary records are sensitive. The assessment should demonstrate that this is und
 
 ### Threat → control matrix
 
-| Threat | Control |
-|---|---|
-| SQL injection | ORM/query builder with parameterised queries only; no string-concatenated SQL. Raw SQL (aggregations) uses bound parameters. Sort fields and filter keys come from allowlists/enums, never from request text. DB role has least privilege (no DDL at runtime, no write on audit rows beyond INSERT). |
-| Invalid / malicious input | Strict DTO validation on every endpoint: `class-validator` + `class-transformer` with `ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })`. Unknown fields rejected. Every string has max length, every number a range, every enum a closed set, UUIDs/ISO currency/ISO country codes format-checked. Pagination `limit` capped. Mirror the same schemas on the frontend. |
-| DoS / abuse | Global request rate limit (`@nestjs/throttler`, Redis-backed store in deployed env), stricter named limits on `/auth/login` and write endpoints. Body size limit (e.g. 100 KB JSON), request timeout, max page size, bounded query cost (no unbounded `LIKE '%x%'` on unindexed columns; trigram/prefix indexes), DB statement timeout and connection-pool cap, reverse-proxy limits (connections, header size, slow-client timeouts). |
-| Brute force / credential stuffing | Per-IP and per-account login throttling, progressive lockout, argon2id hashing, uniform error for unknown user vs wrong password. |
-| XSS / clickjacking / sniffing | `helmet`, strict CSP (no inline scripts), `HttpOnly` + `Secure` + `SameSite` cookies, React output escaping, no `dangerouslySetInnerHTML`. |
-| CSRF | `SameSite=Lax/Strict` cookies plus same-origin check or CSRF token on state-changing requests. |
-| Broken access control | Global auth guard (deny by default), `@Public()` opt-out, role guard, ownership checks in services, tests asserting 401/403 on every route. |
-| Mass assignment | DTO whitelisting; response DTOs never expose entities or password hashes. |
-| Sensitive data exposure | Redacting logger (no passwords, tokens, salary payloads), TLS everywhere, secrets only in env/secret store. |
-| Vulnerable dependencies | `pnpm audit`, Dependabot, container image scan in CI, lockfile enforced. |
-| Upload abuse | See section 5C. |
+| Threat                            | Control                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SQL injection                     | ORM/query builder with parameterised queries only; no string-concatenated SQL. Raw SQL (aggregations) uses bound parameters. Sort fields and filter keys come from allowlists/enums, never from request text. DB role has least privilege (no DDL at runtime, no write on audit rows beyond INSERT).                                                                                                                                   |
+| Invalid / malicious input         | Strict DTO validation on every endpoint: `class-validator` + `class-transformer` with `ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })`. Unknown fields rejected. Every string has max length, every number a range, every enum a closed set, UUIDs/ISO currency/ISO country codes format-checked. Pagination `limit` capped. Mirror the same schemas on the frontend.                                |
+| DoS / abuse                       | Global request rate limit (`@nestjs/throttler`, Redis-backed store in deployed env), stricter named limits on `/auth/login` and write endpoints. Body size limit (e.g. 100 KB JSON), request timeout, max page size, bounded query cost (no unbounded `LIKE '%x%'` on unindexed columns; trigram/prefix indexes), DB statement timeout and connection-pool cap, reverse-proxy limits (connections, header size, slow-client timeouts). |
+| Brute force / credential stuffing | Per-IP and per-account login throttling, progressive lockout, argon2id hashing, uniform error for unknown user vs wrong password.                                                                                                                                                                                                                                                                                                      |
+| XSS / clickjacking / sniffing     | `helmet`, strict CSP (no inline scripts), `HttpOnly` + `Secure` + `SameSite` cookies, React output escaping, no `dangerouslySetInnerHTML`.                                                                                                                                                                                                                                                                                             |
+| CSRF                              | `SameSite=Lax/Strict` cookies plus same-origin check or CSRF token on state-changing requests.                                                                                                                                                                                                                                                                                                                                         |
+| Broken access control             | Global auth guard (deny by default), `@Public()` opt-out, role guard, ownership checks in services, tests asserting 401/403 on every route.                                                                                                                                                                                                                                                                                            |
+| Mass assignment                   | DTO whitelisting; response DTOs never expose entities or password hashes.                                                                                                                                                                                                                                                                                                                                                              |
+| Sensitive data exposure           | Redacting logger (no passwords, tokens, salary payloads), TLS everywhere, secrets only in env/secret store.                                                                                                                                                                                                                                                                                                                            |
+| Vulnerable dependencies           | `pnpm audit`, Dependabot, container image scan in CI, lockfile enforced.                                                                                                                                                                                                                                                                                                                                                               |
+| Upload abuse                      | See section 5C.                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### Rate limiting policy
 
-| Scope | Limit (starting values, tune by measurement) |
-|---|---|
-| Global, per IP | 100 requests / minute |
-| `POST /auth/login`, per IP + per account | 5 attempts / minute, lockout after repeated failures |
-| Write endpoints (POST/PATCH/DELETE), per authenticated user | 30 / minute |
-| Insights/aggregation endpoints, per user | 30 / minute (heavier queries) |
-| File upload, per user | 10 / minute |
+| Scope                                                       | Limit (starting values, tune by measurement)         |
+| ----------------------------------------------------------- | ---------------------------------------------------- |
+| Global, per IP                                              | 100 requests / minute                                |
+| `POST /auth/login`, per IP + per account                    | 5 attempts / minute, lockout after repeated failures |
+| Write endpoints (POST/PATCH/DELETE), per authenticated user | 30 / minute                                          |
+| Insights/aggregation endpoints, per user                    | 30 / minute (heavier queries)                        |
+| File upload, per user                                       | 10 / minute                                          |
 
 Exceeded limits return `429` in the standard error envelope with a `Retry-After` header.
 
@@ -340,17 +345,17 @@ type ApiErrorResponse = {
 type FieldError = { field: string; message: string };
 ```
 
-| HTTP | `code` | When |
-|---|---|---|
-| 400 | `VALIDATION_FAILED` | DTO validation failed; `details` lists each field. |
-| 401 | `UNAUTHENTICATED` | Missing, invalid or expired credentials. |
-| 403 | `FORBIDDEN` | Authenticated but not permitted. |
-| 404 | `NOT_FOUND` | Resource missing (also used to avoid leaking existence where relevant). |
-| 409 | `CONFLICT` | Unique-constraint or version conflict. |
-| 413 | `PAYLOAD_TOO_LARGE` | Body or file over limit. |
-| 415 | `UNSUPPORTED_MEDIA_TYPE` | Disallowed file type. |
-| 429 | `RATE_LIMITED` | Throttle exceeded; includes `Retry-After`. |
-| 500 | `INTERNAL_ERROR` | Unexpected; generic message, full detail only in server logs with the same `requestId`. |
+| HTTP | `code`                   | When                                                                                    |
+| ---- | ------------------------ | --------------------------------------------------------------------------------------- |
+| 400  | `VALIDATION_FAILED`      | DTO validation failed; `details` lists each field.                                      |
+| 401  | `UNAUTHENTICATED`        | Missing, invalid or expired credentials.                                                |
+| 403  | `FORBIDDEN`              | Authenticated but not permitted.                                                        |
+| 404  | `NOT_FOUND`              | Resource missing (also used to avoid leaking existence where relevant).                 |
+| 409  | `CONFLICT`               | Unique-constraint or version conflict.                                                  |
+| 413  | `PAYLOAD_TOO_LARGE`      | Body or file over limit.                                                                |
+| 415  | `UNSUPPORTED_MEDIA_TYPE` | Disallowed file type.                                                                   |
+| 429  | `RATE_LIMITED`           | Throttle exceeded; includes `Retry-After`.                                              |
+| 500  | `INTERNAL_ERROR`         | Unexpected; generic message, full detail only in server logs with the same `requestId`. |
 
 Successful responses use a matching generic envelope:
 
@@ -380,32 +385,32 @@ Mirrors the proven patterns from the sister project EduCloud Manager (`packages/
 
 **Frontend (`packages/web-utils` or `apps/web/src/lib`)**
 
-| Block | Purpose |
-|---|---|
-| `useGenericState<T>(initial)` | `useState` plus a key-patching setter and a whole-value setter, both referentially stable. Used instead of raw `useState` everywhere. |
-| `useFormFields<T>(initial)` | One state object per form; `bind(key)` returns `{ value, onChange }` typed per field; `patch`, `reset`. |
-| `httpRequest<TResponse, TBody>(config)` | The single typed `fetch` wrapper: JSON in/out, unwraps `ApiSuccessResponse<T>`, throws `HttpRequestError` carrying `code`, `status`, `requestId`, `details`. |
-| `useApiAction<TResponse, TBody>(url, opts)` | Mutation + pending flag + toast success/error, stable `run`. |
-| `useApiQuery<TResponse, TParams>` | Typed GET with loading/error state and refetch. |
-| `useActionRunner` | Busy flag and toasts for arbitrary async actions. |
-| `<Mapping<T> />` | Render-prop list with `keyExtractor`, `empty` state; server-component safe. |
-| `<DataTable<T> />` | Column-descriptor table (`columns`, `data`, `keyExtractor`, skeleton on `null`, `empty` state), server-component safe. |
-| `<PaginatedTable<T> />` | `DataTable` plus server-side pagination and sort controls driven by URL search params. |
-| `<FormField<T> />`, `<SelectField<T> />` | Generic controlled inputs taking `{ value, onChange }` from `bind`. |
-| `<FormDialog />` | Generic modal form shell. |
-| Chart primitives | Generic bar/donut/column charts fed by typed series. |
+| Block                                       | Purpose                                                                                                                                                      |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `useGenericState<T>(initial)`               | `useState` plus a key-patching setter and a whole-value setter, both referentially stable. Used instead of raw `useState` everywhere.                        |
+| `useFormFields<T>(initial)`                 | One state object per form; `bind(key)` returns `{ value, onChange }` typed per field; `patch`, `reset`.                                                      |
+| `httpRequest<TResponse, TBody>(config)`     | The single typed `fetch` wrapper: JSON in/out, unwraps `ApiSuccessResponse<T>`, throws `HttpRequestError` carrying `code`, `status`, `requestId`, `details`. |
+| `useApiAction<TResponse, TBody>(url, opts)` | Mutation + pending flag + toast success/error, stable `run`.                                                                                                 |
+| `useApiQuery<TResponse, TParams>`           | Typed GET with loading/error state and refetch.                                                                                                              |
+| `useActionRunner`                           | Busy flag and toasts for arbitrary async actions.                                                                                                            |
+| `<Mapping<T> />`                            | Render-prop list with `keyExtractor`, `empty` state; server-component safe.                                                                                  |
+| `<DataTable<T> />`                          | Column-descriptor table (`columns`, `data`, `keyExtractor`, skeleton on `null`, `empty` state), server-component safe.                                       |
+| `<PaginatedTable<T> />`                     | `DataTable` plus server-side pagination and sort controls driven by URL search params.                                                                       |
+| `<FormField<T> />`, `<SelectField<T> />`    | Generic controlled inputs taking `{ value, onChange }` from `bind`.                                                                                          |
+| `<FormDialog />`                            | Generic modal form shell.                                                                                                                                    |
+| Chart primitives                            | Generic bar/donut/column charts fed by typed series.                                                                                                         |
 
 **Backend (`apps/api/src/common`)**
 
-| Block | Purpose |
-|---|---|
-| `PaginatedQueryDto` and `paginate<T>()` | One pagination/sort contract and helper for every list endpoint. |
-| `ApiSuccessResponse<T>` interceptor | Wraps every response in the standard envelope. |
-| `AllExceptionsFilter` | Maps all exceptions to `ApiErrorResponse`. |
-| `BaseRepository<TEntity, TId>` | Generic typed CRUD base; feature repositories add specific queries. |
-| `AuditInterceptor` / `@Audited()` | Generic decorator that records before/after snapshots for any annotated mutation. |
-| `StorageService` (interface) | S3 abstraction, see 5C. |
-| `Result<T, E>` type | Explicit success/failure return for domain logic. |
+| Block                                   | Purpose                                                                           |
+| --------------------------------------- | --------------------------------------------------------------------------------- |
+| `PaginatedQueryDto` and `paginate<T>()` | One pagination/sort contract and helper for every list endpoint.                  |
+| `ApiSuccessResponse<T>` interceptor     | Wraps every response in the standard envelope.                                    |
+| `AllExceptionsFilter`                   | Maps all exceptions to `ApiErrorResponse`.                                        |
+| `BaseRepository<TEntity, TId>`          | Generic typed CRUD base; feature repositories add specific queries.               |
+| `AuditInterceptor` / `@Audited()`       | Generic decorator that records before/after snapshots for any annotated mutation. |
+| `StorageService` (interface)            | S3 abstraction, see 5C.                                                           |
+| `Result<T, E>` type                     | Explicit success/failure return for domain logic.                                 |
 
 ---
 
@@ -424,13 +429,13 @@ Used for employee profile pictures and supporting documents (for example contrac
 
 Additional endpoints:
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/api/v1/employees/:id/avatar` | Upload or replace profile picture (validated, re-encoded) |
-| GET | `/api/v1/employees/:id/avatar` | Returns a short-lived signed URL |
-| DELETE | `/api/v1/employees/:id/avatar` | Remove profile picture |
-| POST | `/api/v1/employees/:id/documents` | Upload supporting document |
-| GET | `/api/v1/employees/:id/documents/:docId` | Signed download URL |
+| Method | Endpoint                                 | Purpose                                                   |
+| ------ | ---------------------------------------- | --------------------------------------------------------- |
+| POST   | `/api/v1/employees/:id/avatar`           | Upload or replace profile picture (validated, re-encoded) |
+| GET    | `/api/v1/employees/:id/avatar`           | Returns a short-lived signed URL                          |
+| DELETE | `/api/v1/employees/:id/avatar`           | Remove profile picture                                    |
+| POST   | `/api/v1/employees/:id/documents`        | Upload supporting document                                |
+| GET    | `/api/v1/employees/:id/documents/:docId` | Signed download URL                                       |
 
 ---
 
@@ -771,17 +776,17 @@ Demonstrate real behaviour. Do not present mocked dashboard numbers as live data
 
 ## 14. Risks and decisions to make explicit
 
-| Risk / decision | Approach |
-|---|---|
-| Different currencies | Group salary metrics by currency; never silently combine unlike currencies. |
-| Salary history | Preserve effective-dated compensation records instead of overwriting history. |
-| Concurrent edits | Use transactions and consider optimistic concurrency for conflicting updates. |
-| Sensitive salary data | Authenticate, authorise, minimise logs and use HTTPS. |
-| Large table responses | Server-side pagination, filtering and sorting. |
-| Seed repeatability | Deterministic data and idempotent or reset-safe seed procedure. |
+| Risk / decision       | Approach                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------- |
+| Different currencies  | Group salary metrics by currency; never silently combine unlike currencies.             |
+| Salary history        | Preserve effective-dated compensation records instead of overwriting history.           |
+| Concurrent edits      | Use transactions and consider optimistic concurrency for conflicting updates.           |
+| Sensitive salary data | Authenticate, authorise, minimise logs and use HTTPS.                                   |
+| Large table responses | Server-side pagination, filtering and sorting.                                          |
+| Seed repeatability    | Deterministic data and idempotent or reset-safe seed procedure.                         |
 | Deployment complexity | Start with Docker Compose or a small managed platform; avoid unnecessary orchestration. |
-| AI-generated defects | Human review, targeted tests and verification of framework/library behaviour. |
-| Scope expansion | Keep payroll, tax, approvals and FX conversion out of the MVP. |
+| AI-generated defects  | Human review, targeted tests and verification of framework/library behaviour.           |
+| Scope expansion       | Keep payroll, tax, approvals and FX conversion out of the MVP.                          |
 
 ### Architecture decision records
 
@@ -800,6 +805,7 @@ Each record should include context, decision, alternatives considered and conseq
 ## 15. Final submission checklist
 
 ### Product
+
 - [ ] Requirements document committed.
 - [ ] Scope and exclusions are explicit.
 - [ ] HR manager can complete the core workflow.
@@ -807,6 +813,7 @@ Each record should include context, decision, alternatives considered and conseq
 - [ ] 10,000 synthetic employees can be seeded.
 
 ### Engineering
+
 - [ ] Backend and frontend are independently understandable.
 - [ ] Database migrations are committed.
 - [ ] Validation and error handling are consistent.
@@ -815,6 +822,7 @@ Each record should include context, decision, alternatives considered and conseq
 - [ ] No unnecessary microservices or infrastructure.
 
 ### Quality
+
 - [ ] Unit tests cover business rules.
 - [ ] Integration tests cover persistence and API behaviour.
 - [ ] End-to-end tests cover the main HR workflow.
@@ -822,6 +830,7 @@ Each record should include context, decision, alternatives considered and conseq
 - [ ] Security-sensitive paths have been reviewed.
 
 ### Delivery
+
 - [ ] CI workflow runs on pull requests.
 - [ ] CD workflow deploys a versioned artifact.
 - [ ] Application is deployed and accessible.

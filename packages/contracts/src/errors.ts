@@ -1,0 +1,62 @@
+export const ERROR_CODES = [
+  'VALIDATION_FAILED',
+  'UNAUTHENTICATED',
+  'FORBIDDEN',
+  'NOT_FOUND',
+  'CONFLICT',
+  'PAYLOAD_TOO_LARGE',
+  'UNSUPPORTED_MEDIA_TYPE',
+  'RATE_LIMITED',
+  'INTERNAL_ERROR',
+] as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[number];
+
+export interface FieldError {
+  readonly field: string;
+  readonly message: string;
+}
+
+export interface ApiErrorBody {
+  readonly code: ErrorCode;
+  readonly message: string;
+  readonly details?: readonly FieldError[];
+  readonly requestId: string;
+  readonly timestamp: string;
+}
+
+export interface ApiErrorResponse {
+  readonly success: false;
+  readonly error: ApiErrorBody;
+}
+
+export const HTTP_STATUS_BY_ERROR_CODE: Readonly<Record<ErrorCode, number>> = {
+  VALIDATION_FAILED: 400,
+  UNAUTHENTICATED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  PAYLOAD_TOO_LARGE: 413,
+  UNSUPPORTED_MEDIA_TYPE: 415,
+  RATE_LIMITED: 429,
+  INTERNAL_ERROR: 500,
+};
+
+export const errorCodeForStatus = (status: number): ErrorCode => {
+  const match = ERROR_CODES.find((code) => HTTP_STATUS_BY_ERROR_CODE[code] === status);
+  if (match) return match;
+  return status >= 500 ? 'INTERNAL_ERROR' : 'VALIDATION_FAILED';
+};
+
+export const isApiErrorResponse = (value: unknown): value is ApiErrorResponse => {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as { success?: unknown; error?: unknown };
+  if (candidate.success !== false) return false;
+  if (typeof candidate.error !== 'object' || candidate.error === null) return false;
+  const error = candidate.error as { code?: unknown; message?: unknown };
+  return (
+    typeof error.message === 'string' &&
+    typeof error.code === 'string' &&
+    (ERROR_CODES as readonly string[]).includes(error.code)
+  );
+};
