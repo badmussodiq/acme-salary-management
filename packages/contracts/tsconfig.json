@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "module": "commonjs", "moduleResolution": "node", "noEmit": true },
+  "compilerOptions": { "module": "nodenext", "noEmit": true, "types": ["node"] },
   "include": ["src"]
 }

@@ -48,15 +48,18 @@ export const errorCodeForStatus = (status: number): ErrorCode => {
   return status >= 500 ? 'INTERNAL_ERROR' : 'VALIDATION_FAILED';
 };
 
-export const isApiErrorResponse = (value: unknown): value is ApiErrorResponse => {
-  if (typeof value !== 'object' || value === null) return false;
-  const candidate = value as { success?: unknown; error?: unknown };
-  if (candidate.success !== false) return false;
-  if (typeof candidate.error !== 'object' || candidate.error === null) return false;
-  const error = candidate.error as { code?: unknown; message?: unknown };
-  return (
-    typeof error.message === 'string' &&
-    typeof error.code === 'string' &&
-    (ERROR_CODES as readonly string[]).includes(error.code)
-  );
-};
+export const isErrorCode = (value: unknown): value is ErrorCode =>
+  ERROR_CODES.some((code) => code === value);
+
+export const isApiErrorResponse = (value: unknown): value is ApiErrorResponse =>
+  typeof value === 'object' &&
+  value !== null &&
+  'success' in value &&
+  value.success === false &&
+  'error' in value &&
+  typeof value.error === 'object' &&
+  value.error !== null &&
+  'code' in value.error &&
+  isErrorCode(value.error.code) &&
+  'message' in value.error &&
+  typeof value.error.message === 'string';
