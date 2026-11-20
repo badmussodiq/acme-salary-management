@@ -30,7 +30,13 @@
     ],
     "typescript/no-unnecessary-type-parameters": "off",
     "eqeqeq": "error",
-    "no-console": "warn"
+    "no-console": "warn",
+    "vitest/expect-expect": [
+      "error",
+      {
+        "assertFunctionNames": ["expect", "measure"]
+      }
+    ]
   },
   "ignorePatterns": ["**/dist/**", "**/.next/**", "**/coverage/**", "**/next-env.d.ts"],
   "overrides": [

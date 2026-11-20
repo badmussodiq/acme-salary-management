@@ -34,6 +34,8 @@ export interface AppConfig {
   readonly sessionTtlHours: number;
   readonly cookieSecure: boolean;
   readonly initialHr: InitialHr | undefined;
+  readonly seedDemoData: boolean;
+  readonly seedEmployeeCount: number;
 }
 
 export interface InitialHr {
@@ -56,6 +58,8 @@ class RawEnvironment {
   @IsString() @MinLength(32) @MaxLength(256) JWT_SECRET =
     'development-only-secret-replace-me-before-deploying';
   @Type(() => Number) @IsInt() @Min(1) @Max(168) SESSION_TTL_HOURS = 8;
+  @IsOptional() @IsIn(['true', 'false']) SEED_DEMO_DATA?: string;
+  @Type(() => Number) @IsInt() @Min(1) @Max(100_000) SEED_EMPLOYEE_COUNT = 10_000;
   @IsOptional() @IsEmail() INITIAL_HR_EMAIL?: string;
   @IsOptional() @IsString() @MinLength(12) @MaxLength(128) INITIAL_HR_PASSWORD?: string;
 }
@@ -104,5 +108,10 @@ export const loadAppConfig = (env: NodeJS.ProcessEnv): AppConfig => {
     sessionTtlHours: raw.SESSION_TTL_HOURS,
     cookieSecure: raw.NODE_ENV === 'production',
     initialHr: resolveInitialHr(raw),
+    seedDemoData:
+      raw.SEED_DEMO_DATA === undefined
+        ? raw.NODE_ENV === 'development'
+        : raw.SEED_DEMO_DATA === 'true',
+    seedEmployeeCount: raw.SEED_EMPLOYEE_COUNT,
   };
 };

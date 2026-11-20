@@ -27,6 +27,7 @@ services:
       INITIAL_HR_EMAIL: ${INITIAL_HR_EMAIL:?INITIAL_HR_EMAIL must be set}
       INITIAL_HR_PASSWORD: ${INITIAL_HR_PASSWORD:?INITIAL_HR_PASSWORD must be set}
       TRUST_PROXY_HOPS: '1'
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
     depends_on:
       postgres:
         condition: service_healthy

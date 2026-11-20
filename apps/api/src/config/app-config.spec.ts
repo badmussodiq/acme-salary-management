@@ -26,8 +26,18 @@ describe('loadAppConfig', () => {
     { BODY_LIMIT: '100 gigabytes' },
     { JWT_SECRET: 'short' },
     { INITIAL_HR_EMAIL: 'not-an-email' },
+    { SEED_DEMO_DATA: 'yes' },
+    { SEED_EMPLOYEE_COUNT: '0' },
   ])('rejects invalid values %o', (env) => {
     expect(() => loadAppConfig(env)).toThrow('Invalid environment configuration');
+  });
+
+  it('seeds demo data by default only in development', () => {
+    expect(loadAppConfig({}).seedDemoData).toBe(true);
+    expect(loadAppConfig({ NODE_ENV: 'test' }).seedDemoData).toBe(false);
+    expect(loadAppConfig({ SEED_DEMO_DATA: 'false' }).seedDemoData).toBe(false);
+    expect(loadAppConfig({ NODE_ENV: 'test', SEED_DEMO_DATA: 'true' }).seedDemoData).toBe(true);
+    expect(loadAppConfig({}).seedEmployeeCount).toBe(10_000);
   });
 
   it('seeds a development HR user only outside production', () => {

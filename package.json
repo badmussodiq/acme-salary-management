@@ -17,7 +17,8 @@
     "verify": "pnpm build && pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm test:integration",
     "dev:api": "pnpm --filter @acme/contracts build && pnpm --filter @acme/api start:dev",
     "dev:web": "pnpm --filter @acme/contracts build && pnpm --filter @acme/web dev",
-    "test:e2e": "pnpm --filter @acme/e2e test:e2e"
+    "test:e2e": "pnpm --filter @acme/e2e test:e2e",
+    "seed": "pnpm --filter @acme/contracts build && pnpm --filter @acme/api build && pnpm --filter @acme/api seed"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

@@ -26,6 +26,7 @@ services:
       INITIAL_HR_PASSWORD: ${E2E_HR_PASSWORD:?E2E_HR_PASSWORD must be set}
       TRUST_PROXY_HOPS: '1'
       THROTTLE_LIMIT: '100000'
+      SEED_DEMO_DATA: 'true'
     depends_on:
       postgres:
         condition: service_healthy
