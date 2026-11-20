@@ -25,7 +25,9 @@ pnpm dev:api
 pnpm dev:web
 ```
 
-The API applies database migrations on startup. Configuration defaults suit local development; see `.env.example` for every variable.
+The API applies database migrations and creates the first HR manager on startup. Open http://localhost:3000 and sign in with the development credentials in `.env.example`. In production, set `INITIAL_HR_EMAIL` and `INITIAL_HR_PASSWORD`; no default account is created.
+
+Configuration defaults suit local development; see `.env.example` for every variable.
 
 ## Quality checks
 
@@ -33,4 +35,4 @@ The API applies database migrations on startup. Configuration defaults suit loca
 pnpm verify
 ```
 
-Runs formatting, linting, type checks, tests and builds.
+Runs formatting, linting, type checks, unit tests, builds and the integration tests. Integration tests create a throwaway database per test file on the local Postgres (`pnpm db:up`), or the server named by `TEST_DATABASE_ADMIN_URL`.

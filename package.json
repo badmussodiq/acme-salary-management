@@ -13,7 +13,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "db:up": "docker compose up -d --wait",
-    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "test:integration": "pnpm --filter @acme/api test:integration",
+    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:integration",
     "dev:api": "pnpm --filter @acme/contracts build && pnpm --filter @acme/api start:dev",
     "dev:web": "pnpm --filter @acme/contracts build && pnpm --filter @acme/web dev"
   },

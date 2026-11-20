@@ -4,7 +4,7 @@
 
 **Assessment:** Incubyte — Software Craftsperson / Node / React / TypeScript II  
 **Document type:** Requirements, solution design and execution plan  
-**Status:** Phase 2 (foundation) complete; Phase 3 (core workflow) next
+**Status:** Phase 3 (core workflow) complete; Phase 4 (insights and 10,000-employee seed) next
 
 ---
 
