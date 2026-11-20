@@ -1,0 +1,41 @@
+name: acme-e2e
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: acme
+      POSTGRES_PASSWORD: acme
+      POSTGRES_DB: acme
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U acme -d acme']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    image: ${API_IMAGE:-acme-salary-api:local}
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://acme:acme@postgres:5432/acme
+      WEB_ORIGIN: http://localhost:3000
+      JWT_SECRET: ${E2E_JWT_SECRET:-e2e-only-secret-that-is-at-least-32-characters-long}
+      INITIAL_HR_EMAIL: ${E2E_HR_EMAIL:-hr@acme.test}
+      INITIAL_HR_PASSWORD: ${E2E_HR_PASSWORD:?E2E_HR_PASSWORD must be set}
+      TRUST_PROXY_HOPS: '1'
+      THROTTLE_LIMIT: '100000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    image: ${WEB_IMAGE:-acme-salary-web:local}
+    environment:
+      API_ORIGIN: http://api:3001
+    ports:
+      - '3000:3000'
+    depends_on:
+      api:
+        condition: service_healthy
