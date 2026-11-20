@@ -18,20 +18,20 @@ The recording is written to `apps/e2e/demo-output/*/video.webm` (about 4 minutes
 
 Target 4 to 6 minutes. Show real behaviour; do not narrate numbers you have not looked at.
 
-| #   | Screen                                | Say                                                                                                                                       |
-| --- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Sign-in                               | HR manages pay for 10,000 people across every country in spreadsheets. This replaces that. Sign in; the cookie is HttpOnly and revocable. |
-| 2   | Dashboard top                         | Headcount, active and inactive, and employees with no pay in effect, computed live in SQL.                                                |
-| 3   | Pay currency and frequency            | Pay is in more than 150 currencies and three frequencies. We never add or convert them: every figure is one currency at one frequency.    |
-| 4   | Salary summary                        | Minimum, median, average, maximum per currency. Group by department, filter to Nigeria.                                                   |
-| 5   | Data quality                          | Active people with no pay, inactive people still paid, and salaries more than three times or under a third of the median for the role.    |
-| 6   | Directory                             | Server-side search, filters and sorting on 10,000 rows; the page loads in tens of milliseconds (see performance.md).                      |
-| 7   | Employee page                         | Profile, current pay, full pay history, audit trail.                                                                                      |
-| 8   | Add compensation, then an invalid one | A raise closes the previous period. A start date before the latest period is refused: the rule is in the API and in the database.         |
-| 9   | New employee, then edit               | Generated employee number, audited creation, optimistic concurrency on edit.                                                              |
-| 10  | Repository                            | Typed contracts, strict validation, 300 automated tests, CI with browser tests against the Docker images, CD with scanning and approval.  |
-| 11  | Security and operations               | Nonce CSP, per-user rate limits, revocable sessions, hardened containers; backups with a tested restore; automatic rollout and rollback.  |
-| 12  | Sign out                              | Signing out revokes the session on the server.                                                                                            |
+| #   | Screen                                | Say                                                                                                                                                |
+| --- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Sign-in                               | HR manages pay for 10,000 people across every country in spreadsheets. This replaces that. Sign in; the cookie is HttpOnly and revocable.          |
+| 2   | Dashboard top                         | Headcount, active and inactive, and employees with no pay in effect, computed live in SQL.                                                         |
+| 3   | Pay currency and frequency            | Pay is in more than 150 currencies and three frequencies. We never add or convert them: every figure is one currency at one frequency.             |
+| 4   | Salary summary                        | Minimum, median, average, maximum per currency. Group by department, filter to Nigeria.                                                            |
+| 5   | Data quality                          | Active people with no pay, inactive people still paid, and salaries more than three times or under a third of the median for the role.             |
+| 6   | Directory                             | Server-side search, filters and sorting on 10,000 rows; the page loads in tens of milliseconds (see performance.md).                               |
+| 7   | Employee page                         | Profile, current pay, full pay history, audit trail.                                                                                               |
+| 8   | Add compensation, then an invalid one | A raise closes the previous period. A start date before the latest period is refused: the rule is in the API and in the database.                  |
+| 9   | New employee, then edit               | Generated employee number, audited creation, optimistic concurrency on edit.                                                                       |
+| 10  | Repository                            | Typed contracts, strict validation, more than 330 automated tests, CI with browser tests against the Docker images, CD with scanning and approval. |
+| 11  | Security and operations               | Nonce CSP, per-user rate limits, revocable sessions, hardened containers; backups with a tested restore; automatic rollout and rollback.           |
+| 12  | Sign out                              | Signing out revokes the session on the server.                                                                                                     |
 
 ## Before recording
 

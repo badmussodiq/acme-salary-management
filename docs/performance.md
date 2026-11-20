@@ -29,7 +29,7 @@ pnpm test:integration
 | Salary distribution by job title               |        52.5 |     54.2 |
 | Data quality (missing, inconsistent, outliers) |        43.7 |     86.6 |
 
-The seed figure includes `ANALYZE`. A cold container start (migrate, create the HR user, seed) took about 3 seconds in the production image.
+The seed figure includes `ANALYZE`. A cold container start (migrate, create the HR user, seed all 247 countries) took about 10 seconds in the production image.
 
 ## Why it is fast
 

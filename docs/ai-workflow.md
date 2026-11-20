@@ -18,26 +18,29 @@ This project was built with Claude Code (Claude Sonnet 5.5) working in the repos
 
 ## Where the AI was wrong and what caught it
 
-| What went wrong                                                                                            | What caught it                                        |
-| ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| The chosen linter does not support TypeScript 7                                                            | The tool crashed on first use; replaced with oxlint   |
-| The API image crashed on start: a runtime package was listed as a dev dependency                           | Starting the built image                              |
-| The seed command failed outside the app: a required import was missing                                     | Running the command for real                          |
-| After adding server-side sign-out, a revoked session looped forever between two pages                      | A browser test written for the new behaviour          |
-| The fix for that redirected to `0.0.0.0` inside the container                                              | Running the browser suite against the container       |
-| The first backup of a fresh stack was empty because the backup started before the API had created the data | A restore drill that compared row counts              |
-| The restore script restarted the configured tag instead of the release that was running                    | Reading the drill output                              |
-| The deploy script aborted when it could not snapshot the old image, the case where a fix is needed most    | Rebuilding images mid-test                            |
-| The production compose assumed port 443 for the public origin, so sign-in was refused on another port      | Recording the demo against a non-standard port        |
-| JSON `__proto__` keys were silently ignored instead of rejected                                            | A test written to the stricter rule                   |
-| A signed-in user's rate limit was shared with every user on the same address                               | An integration test with two users behind one address |
-| Shell quoting repeatedly corrupted scripted edits                                                          | The type checker and the formatter                    |
+| What went wrong                                                                                                 | What caught it                                                            |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| The chosen linter does not support TypeScript 7                                                                 | The tool crashed on first use; replaced with oxlint                       |
+| The API image crashed on start: a runtime package was listed as a dev dependency                                | Starting the built image                                                  |
+| The seed command failed outside the app: a required import was missing                                          | Running the command for real                                              |
+| After adding server-side sign-out, a revoked session looped forever between two pages                           | A browser test written for the new behaviour                              |
+| The fix for that redirected to `0.0.0.0` inside the container                                                   | Running the browser suite against the container                           |
+| The first backup of a fresh stack was empty because the backup started before the API had created the data      | A restore drill that compared row counts                                  |
+| The restore script restarted the configured tag instead of the release that was running                         | Reading the drill output                                                  |
+| The deploy script aborted when it could not snapshot the old image, the case where a fix is needed most         | Rebuilding images mid-test                                                |
+| The production compose assumed port 443 for the public origin, so sign-in was refused on another port           | Recording the demo against a non-standard port                            |
+| JSON `__proto__` keys were silently ignored instead of rejected                                                 | A test written to the stricter rule                                       |
+| A signed-in user's rate limit was shared with every user on the same address                                    | An integration test with two users behind one address                     |
+| The dashboard bars were never drawn: Tailwind did not scan the shared package that defines them                 | Looking at frames of the recorded demo, then a browser test on bar widths |
+| The demo walkthrough was not repeatable: a second run hit the "start date must be after the latest period" rule | Running the recording twice                                               |
+| The first unit test of the API timed out on a cold clone while other packages ran in parallel                   | A fresh-clone run of the whole suite                                      |
+| Shell quoting repeatedly corrupted scripted edits                                                               | The type checker and the formatter                                        |
 
 One item is not resolved: on one occasion the first dashboard load after seeding hit the 10-second database statement timeout. It could not be reproduced (the same query takes 30 to 46 ms, including right after a reseed), so the seed now runs `ANALYZE` as a precaution and the 10,000-row performance test would flag a recurrence.
 
 ## What stayed human
 
-- Which problem to solve and what to leave out.
+- Which problem to solve and what to leave out. Mid-way the human widened the scope from a sample of countries to every country in the world, and the reference data was regenerated from public datasets rather than typed.
 - The stack and the quality bar (typing, comments, generics, dependency policy).
 - Reviewing each phase's result and deciding what came next.
 - Accepting trade-offs that are recorded in [decisions.md](decisions.md) and [security.md](security.md) instead of hiding them.
