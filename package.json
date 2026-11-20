@@ -12,7 +12,7 @@
     "format:fix": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "db:up": "docker compose up -d --wait",
+    "db:up": "docker compose -f docker-compose-infra.yml up -d --wait",
     "test:integration": "pnpm --filter @acme/api test:integration",
     "verify": "pnpm build && pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm test:integration",
     "dev:api": "pnpm --filter @acme/contracts build && pnpm --filter @acme/api start:dev",

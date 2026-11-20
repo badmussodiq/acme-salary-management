@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { credentials, uniqueSuffix } from '../tests/support';
+import { credentials, solidPng, uniqueSuffix } from '../tests/support';
 import {
   clearCaption,
   fillDate,
@@ -155,6 +155,19 @@ test('HR manager walkthrough', async ({ page }) => {
   await expect(page).toHaveURL(/\/employees\/[0-9a-f-]{36}$/);
   await page.waitForLoadState('networkidle');
   await say(page, 'Created. The employee number is generated and the creation is audited', 3800);
+
+  await say(
+    page,
+    'Profile pictures upload to S3-compatible storage; initials show until then',
+    3200,
+  );
+  await page.getByLabel('Profile picture file').setInputFiles({
+    name: 'grace.png',
+    mimeType: 'image/png',
+    buffer: solidPng(96, [30, 120, 200]),
+  });
+  await expect(page.getByRole('button', { name: 'Remove' })).toBeVisible();
+  await page.waitForTimeout(2500);
 
   await say(
     page,

@@ -1,11 +1,17 @@
-import type { CountryCode, CurrencyCode, EmploymentStatus, PayFrequency } from '@acme/contracts';
+import {
+  COUNTRIES,
+  type CountryCode,
+  type CurrencyCode,
+  type EmploymentStatus,
+  type PayFrequency,
+} from '@acme/contracts';
 import { createRandom, deterministicUuid, type Random } from './random';
 import {
-  COUNTRY_PROFILES,
   DEPARTMENTS,
   FIRST_NAMES,
   HOURLY_ROLES,
   LAST_NAMES,
+  profileOf,
   type CountryProfile,
 } from './seed-data';
 
@@ -130,16 +136,16 @@ const buildCompensations = (
 
 export const generateEmployees = (count: number, seed: number = DEFAULT_SEED): SeedEmployee[] => {
   const random = createRandom(seed);
-  const countries = Object.entries(COUNTRY_PROFILES).flatMap(([code, profile]) =>
-    isCountry(code) ? [[code, profile.weight] as const] : [],
-  );
+  const profiles = new Map(COUNTRIES.map((country) => [country.code, profileOf(country.code)]));
+  const countries = [...profiles].map(([code, profile]) => [code, profile.weight] as const);
   const departments = Object.entries(DEPARTMENTS).map(
     ([name, profile]) => [name, profile.weight] as const,
   );
 
   return Array.from({ length: count }, (_, index) => {
     const countryCode = random.weighted(countries);
-    const profile = COUNTRY_PROFILES[countryCode];
+    const profile = profiles.get(countryCode);
+    if (!profile) throw new Error(`Unknown country ${countryCode}`);
     const department = random.weighted(departments);
     const departmentProfile = DEPARTMENTS[department];
     if (!departmentProfile) throw new Error(`Unknown department ${department}`);
@@ -147,8 +153,8 @@ export const generateEmployees = (count: number, seed: number = DEFAULT_SEED): S
       departmentProfile.roles.map((entry) => [entry, entry.weight] as const),
     );
 
-    const firstName = random.pick(FIRST_NAMES[profile.names]);
-    const lastName = random.pick(LAST_NAMES[profile.names]);
+    const firstName = random.pick(FIRST_NAMES);
+    const lastName = random.pick(LAST_NAMES);
     const hiredMs =
       FIRST_HIRE_MS + random.int(0, Math.floor((LAST_DATE_MS - FIRST_HIRE_MS) / DAY_MS)) * DAY_MS;
     const employmentStatus: EmploymentStatus = random.chance(INACTIVE_SHARE)
@@ -172,5 +178,3 @@ export const generateEmployees = (count: number, seed: number = DEFAULT_SEED): S
     };
   });
 };
-
-const isCountry = (code: string): code is CountryCode => code in COUNTRY_PROFILES;

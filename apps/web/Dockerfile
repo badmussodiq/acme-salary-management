@@ -18,7 +18,6 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 FROM deps AS build
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY tsconfig.base.json ./
-COPY scripts scripts
 COPY packages/contracts packages/contracts
 COPY packages/web-utils packages/web-utils
 COPY apps/web apps/web

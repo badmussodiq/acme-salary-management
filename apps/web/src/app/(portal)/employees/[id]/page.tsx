@@ -1,11 +1,18 @@
-import type { AuditEventDto, CompensationDto, EmployeeDetailDto } from '@acme/contracts';
+import type {
+  AuditEventDto,
+  CompensationDto,
+  EmployeeDetailDto,
+  FeaturesDto,
+} from '@acme/contracts';
 import { currencyOfCountry } from '@acme/contracts';
 import { DataTable, type DataTableColumn } from '@acme/web-utils';
+import { Avatar } from '@/components/avatar';
 import { Badge, Card, LinkButton, PageHeader, TABLE_CLASS } from '@/components/ui';
 import { AUDIT_ACTION_LABELS, describeAuditEvent } from '@/lib/audit';
 import { countryName, formatDate, formatDateTime, formatPay, fullName } from '@/lib/format';
 import { serverData } from '@/lib/server-api';
 import { AddCompensationForm } from './add-compensation-form';
+import { AvatarUpload } from './avatar-upload';
 
 const AUDIT_PAGE_SIZE = 20;
 
@@ -44,10 +51,11 @@ const Detail = ({ label, value }: { readonly label: string; readonly value: stri
 
 const EmployeePage = async ({ params }: { readonly params: Promise<{ readonly id: string }> }) => {
   const { id } = await params;
-  const [employee, history, audit] = await Promise.all([
+  const [employee, history, audit, features] = await Promise.all([
     serverData<EmployeeDetailDto>(`/employees/${id}`),
     serverData<CompensationDto[]>(`/employees/${id}/compensation`),
     serverData<AuditEventDto[]>(`/employees/${id}/audit?limit=${AUDIT_PAGE_SIZE}`),
+    serverData<FeaturesDto>('/features'),
   ]);
   const current = employee.currentCompensation;
 
@@ -64,6 +72,12 @@ const EmployeePage = async ({ params }: { readonly params: Promise<{ readonly id
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card title="Profile" className="lg:col-span-2">
+          <div className="mb-5">
+            <Avatar employee={employee} size="lg" />
+            {features.profilePictures && (
+              <AvatarUpload employeeId={employee.id} hasAvatar={employee.avatarUrl !== null} />
+            )}
+          </div>
           <dl className="grid gap-4 sm:grid-cols-2">
             <Detail label="Email" value={employee.email} />
             <Detail label="Country" value={countryName(employee.countryCode)} />

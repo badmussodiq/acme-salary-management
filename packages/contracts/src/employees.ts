@@ -34,6 +34,7 @@ export interface EmployeeSummaryDto {
   readonly jobTitle: string;
   readonly employmentStatus: EmploymentStatus;
   readonly hiredOn: string;
+  readonly avatarUrl: string | null;
   readonly currentCompensation: CurrentCompensationDto | null;
 }
 

@@ -15,6 +15,9 @@ export interface EmployeeWithCompensationRow extends Selectable<EmployeesTable> 
   readonly comp_effective_from: string | null;
 }
 
+const avatarUrlOf = (row: Selectable<EmployeesTable>): string | null =>
+  row.avatar_key ? `/api/v1/employees/${row.id}/avatar?v=${row.updated_at.getTime()}` : null;
+
 export const toEmployeeSummary = (row: EmployeeWithCompensationRow): EmployeeSummaryDto => ({
   id: row.id,
   employeeNumber: row.employee_number,
@@ -26,6 +29,7 @@ export const toEmployeeSummary = (row: EmployeeWithCompensationRow): EmployeeSum
   jobTitle: row.job_title,
   employmentStatus: row.employment_status,
   hiredOn: row.hired_on,
+  avatarUrl: avatarUrlOf(row),
   currentCompensation:
     row.comp_amount && row.comp_currency_code && row.comp_pay_frequency && row.comp_effective_from
       ? {

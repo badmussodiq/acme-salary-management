@@ -14,6 +14,7 @@ export const AUDIT_ACTION_LABELS: Readonly<Record<AuditAction, string>> = {
   'employee.created': 'Employee created',
   'employee.updated': 'Employee updated',
   'compensation.added': 'Compensation added',
+  'employee.avatar_changed': 'Profile picture changed',
 };
 
 const describeUpdate = (before: JsonObject, after: JsonObject): string =>
@@ -32,6 +33,9 @@ export const describeAuditEvent = (event: AuditEventDto): string => {
   if (!isObject(event.after)) return AUDIT_ACTION_LABELS[event.action];
   if (event.action === 'employee.updated') {
     return describeUpdate(isObject(event.before) ? event.before : {}, event.after);
+  }
+  if (event.action === 'employee.avatar_changed') {
+    return event.after['hasAvatar'] === true ? 'Picture set' : 'Picture removed';
   }
   if (event.action === 'compensation.added') return describeCompensation(event.before, event.after);
   return `${text(event.after['firstName'])} ${text(event.after['lastName'])} (${text(event.after['employeeNumber'])})`;

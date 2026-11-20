@@ -36,6 +36,7 @@ export interface EmployeesTable {
   employment_status: Generated<EmploymentStatus>;
   hired_on: DateOnly;
   is_synthetic: Generated<boolean>;
+  avatar_key: string | null;
   version: Generated<number>;
   created_at: Generated<Date>;
   updated_at: Generated<Date>;

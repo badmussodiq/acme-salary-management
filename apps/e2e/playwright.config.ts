@@ -40,7 +40,7 @@ export default defineConfig({
     },
     {
       name: 'workflow',
-      testMatch: /hr-workflow\.spec\.ts/,
+      testMatch: /(hr-workflow|avatar)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], storageState: STORAGE_STATE },
       dependencies: ['setup'],
     },

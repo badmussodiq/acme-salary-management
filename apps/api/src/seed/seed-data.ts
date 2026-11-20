@@ -1,5 +1,5 @@
 import type { CountryCode, CurrencyCode, PayFrequency } from '@acme/contracts';
-import { WORLD_PROFILES } from './world-profiles.generated';
+import { COUNTRIES } from '@acme/contracts';
 
 export interface CountryProfile {
   readonly weight: number;
@@ -8,10 +8,191 @@ export interface CountryProfile {
   readonly perUsd: number;
   readonly frequency: PayFrequency;
   readonly usdContractorShare: number;
-  readonly names: 'african' | 'western' | 'asian' | 'latin';
 }
 
-export const COUNTRY_PROFILES: Readonly<Record<CountryCode, CountryProfile>> = WORLD_PROFILES;
+const LARGE_COUNTRY_WEIGHTS: Readonly<Record<string, number>> = {
+  CN: 40,
+  IN: 40,
+  US: 30,
+  ID: 15,
+  PK: 14,
+  NG: 14,
+  BR: 14,
+  BD: 12,
+  RU: 12,
+  MX: 10,
+  JP: 10,
+  ET: 9,
+  PH: 9,
+  EG: 9,
+  VN: 9,
+  DE: 9,
+  TR: 9,
+  GB: 9,
+  FR: 8,
+  IT: 8,
+  ZA: 7,
+  KE: 6,
+  CA: 6,
+  GH: 5,
+  AU: 5,
+  ES: 5,
+  KR: 5,
+  TH: 5,
+  PL: 4,
+  AR: 4,
+  CO: 4,
+  SA: 4,
+  TZ: 4,
+  SG: 3,
+  AE: 3,
+};
+
+const HIGH_INCOME: ReadonlySet<string> = new Set([
+  'US',
+  'CA',
+  'GB',
+  'DE',
+  'FR',
+  'IT',
+  'ES',
+  'NL',
+  'BE',
+  'AT',
+  'CH',
+  'SE',
+  'NO',
+  'DK',
+  'FI',
+  'IE',
+  'LU',
+  'IS',
+  'AU',
+  'NZ',
+  'JP',
+  'KR',
+  'SG',
+  'HK',
+  'IL',
+  'AE',
+  'QA',
+  'KW',
+  'MC',
+  'LI',
+  'SM',
+  'AD',
+  'MT',
+  'CY',
+  'SI',
+  'CZ',
+  'EE',
+  'PT',
+  'GR',
+  'BH',
+  'BN',
+  'MO',
+  'PR',
+  'GU',
+  'VI',
+]);
+
+const MIDDLE_INCOME: ReadonlySet<string> = new Set([
+  'CN',
+  'BR',
+  'MX',
+  'TR',
+  'RU',
+  'ZA',
+  'TH',
+  'MY',
+  'CL',
+  'AR',
+  'CO',
+  'PE',
+  'KZ',
+  'RO',
+  'BG',
+  'PL',
+  'HU',
+  'HR',
+  'SK',
+  'LT',
+  'LV',
+  'RS',
+  'CR',
+  'PA',
+  'UY',
+  'MU',
+  'BW',
+  'SA',
+  'OM',
+  'GA',
+  'DO',
+  'EC',
+]);
+
+const RATES_PER_USD: Readonly<Record<string, number>> = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.78,
+  JPY: 150,
+  CNY: 7.2,
+  INR: 83,
+  NGN: 1500,
+  GHS: 15,
+  KES: 130,
+  ZAR: 18,
+  EGP: 50,
+  CAD: 1.37,
+  AUD: 1.5,
+  NZD: 1.65,
+  CHF: 0.9,
+  SGD: 1.35,
+  AED: 3.67,
+  SAR: 3.75,
+  BRL: 5,
+  MXN: 17,
+  TRY: 32,
+  RUB: 90,
+  IDR: 15500,
+  PKR: 280,
+  BDT: 110,
+  PHP: 56,
+  VND: 24500,
+  THB: 36,
+  MYR: 4.7,
+  KRW: 1350,
+  ILS: 3.7,
+  PLN: 4,
+  SEK: 10.5,
+  NOK: 10.7,
+  DKK: 6.9,
+  ARS: 900,
+  COP: 3900,
+  CLP: 950,
+  PEN: 3.7,
+  ETB: 57,
+  TZS: 2600,
+  UGX: 3800,
+  XAF: 600,
+  XOF: 600,
+};
+
+const DEFAULT_RATE_PER_USD = 50;
+
+export const profileOf = (code: CountryCode): CountryProfile => {
+  const country = COUNTRIES.find((entry) => entry.code === code);
+  if (!country) throw new Error(`Unknown country ${code}`);
+  const costFactor = HIGH_INCOME.has(code) ? 0.9 : MIDDLE_INCOME.has(code) ? 0.55 : 0.3;
+  return {
+    weight: LARGE_COUNTRY_WEIGHTS[code] ?? 1,
+    currency: country.currency,
+    costFactor,
+    perUsd: RATES_PER_USD[country.currency] ?? DEFAULT_RATE_PER_USD,
+    frequency: costFactor >= 0.9 ? 'annual' : 'monthly',
+    usdContractorShare: costFactor <= 0.3 && country.currency !== 'USD' ? 0.1 : 0,
+  };
+};
 
 export interface RoleProfile {
   readonly title: string;
@@ -113,7 +294,7 @@ export const HOURLY_ROLES: ReadonlySet<string> = new Set([
   'Logistics Coordinator',
 ]);
 
-export const FIRST_NAMES: Readonly<Record<CountryProfile['names'], readonly string[]>> = {
+const FIRST_NAME_GROUPS: Readonly<Record<string, readonly string[]>> = {
   african: [
     'Chinedu',
     'Ngozi',
@@ -224,7 +405,7 @@ export const FIRST_NAMES: Readonly<Record<CountryProfile['names'], readonly stri
   ],
 };
 
-export const LAST_NAMES: Readonly<Record<CountryProfile['names'], readonly string[]>> = {
+const LAST_NAME_GROUPS: Readonly<Record<string, readonly string[]>> = {
   african: [
     'Okafor',
     'Adeyemi',
@@ -334,3 +515,6 @@ export const LAST_NAMES: Readonly<Record<CountryProfile['names'], readonly strin
     'Cardoso',
   ],
 };
+
+export const FIRST_NAMES: readonly string[] = Object.values(FIRST_NAME_GROUPS).flat();
+export const LAST_NAMES: readonly string[] = Object.values(LAST_NAME_GROUPS).flat();

@@ -1,61 +1,44 @@
-# CI/CD and deployment
+# CI/CD
 
 ```
-pull request / push to main ──> CI ──> (main only) CD: build + scan + push sha tag ──> validate bundle ──> approval ──> promote `latest` ──> server updater pulls and restarts
+pull request / push to master ──> CI ──> (master only) CD: build, scan, push images ──> Render deploy hook ──> smoke check
 ```
+
+The web app is not deployed by CD: the Vercel project is connected to the repository and redeploys itself on every push to `master`.
 
 ## CI — `.github/workflows/ci.yml`
 
-Runs on every pull request and every push to `main`. Docs-only changes skip it.
+Runs on pull requests and pushes to `master`. Docs-only changes skip it.
 
-| Job           | What it proves                                                                                                                                                                                         |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `verify`      | `pnpm audit --prod` (a known high or critical advisory fails the build), build, formatting, type-aware lint, type check, unit tests of every package                                                   |
-| `integration` | API tests against a real Postgres service. Each test file creates and drops its own database, so the suite needs nothing prepared                                                                      |
-| `e2e`         | Builds the real Docker images, starts them with a throwaway Postgres (`deploy/compose.e2e.yaml`) and drives the HR workflow in Chromium with Playwright. Failures upload the report and container logs |
+| Job           | What it proves                                                                                                                      |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `verify`      | `pnpm audit --prod`, build, formatting, type-aware lint, type check, unit tests of every package                                    |
+| `secrets`     | A full-history secret scan                                                                                                          |
+| `integration` | API tests against a real Postgres service; each test file creates and drops its own database                                        |
+| `e2e`         | Builds the Docker images, starts them with `docker-compose.yml` (Postgres, RustFS, API, web) and drives the HR workflow in Chromium |
 
-`pnpm verify` runs the same checks locally. `pnpm test:e2e` runs the browser tests against local servers (build first with `pnpm build`, and start Postgres with `pnpm db:up`).
+`pnpm verify` runs the same checks locally.
 
 ## Images
 
-Multi-stage builds that keep the runtime small:
-
-- **deps** stage: manifests and lockfile only, with the pnpm store as a BuildKit cache mount, so source edits do not reinstall.
-- **build** stage: compiles the shared contracts and the app. The API ships production dependencies only (`pnpm deploy --prod`); the web app ships Next's `standalone` output.
-- **runtime** stage: plain `alpine` plus `libstdc++` and the single `node` binary copied from the official image (no npm, yarn or corepack), running as an unprivileged user with a `HEALTHCHECK`.
-
-Uncompressed, each image is about 200 MB, of which 133 MB is the Node binary itself.
-
-The web app proxies `/api/v1/*` to `API_ORIGIN` at runtime (a route handler, not a build-time rewrite), so one image works in every environment.
+Multi-stage builds ending in plain Alpine with only the Node binary, running as an unprivileged user with a health check. The web app proxies `/api/v1/*` to `API_ORIGIN` at runtime, so one image works everywhere.
 
 ## CD — `.github/workflows/cd.yml`
 
-Starts only after CI succeeded for a push to `main`.
+Starts only after CI succeeded for a push to `master`.
 
-| Job              | What it does                                                                                                                                                |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `publish`        | Builds each image, scans it with Trivy (fixable high or critical findings fail the run) and pushes it to GHCR as `sha-<commit>`. Nothing moves `latest` yet |
-| `release-bundle` | Lints `deploy.sh` with shellcheck, validates `compose.prod.yaml`, and uploads the deployment bundle with a `release.json` naming the exact images           |
-| `deploy`         | Runs in the `production` GitHub environment, so a required reviewer can gate it. It re-points `latest` at the release. No server is contacted               |
+| Job          | What it does                                                                                                                              |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `publish`    | Builds each image, scans it with Trivy (fixable high or critical findings fail the run) and pushes it to GHCR as `sha-<commit>`           |
+| `deploy-api` | Calls the Render deploy hook (`RENDER_DEPLOY_HOOK_URL` secret). Render auto-deploy must be off so this is the only trigger                |
+| `smoke`      | Polls `API_URL/api/v1/health/ready` for up to 10 minutes (a sleeping free-plan service needs time to wake), then checks `WEB_URL/healthz` |
 
-## Automatic rollout on the server
+GitHub settings: secret `RENDER_DEPLOY_HOOK_URL`; variables `API_URL` and `WEB_URL`; an environment named `production` (optionally with a required reviewer).
 
-`deploy/compose.prod.yaml` runs Postgres, the API, the web app, Caddy (automatic HTTPS) and an **updater** (Watchtower). The updater watches the `latest` tag of the API and web images and, when CD moves it, pulls the new image and recreates the container. The API migrates the database itself on start, so nothing is run by hand.
+## Hosting setup
 
-For an explicit deploy, pin or rollback, run on the server:
+- **Render:** a web service from `apps/api/Dockerfile` with the repository root as the Docker context. Environment variables are set in the Render dashboard. The API migrates and seeds itself on start.
+- **Vercel:** a project with root directory `apps/web` (`apps/web/vercel.json` holds the build commands). Set `API_ORIGIN` to the Render URL.
+- **Free plan:** Render sleeps an idle free service, so the first request after a pause can take about a minute.
 
-```bash
-deploy/deploy.sh sha-<commit>
-```
-
-`deploy.sh` records the running images, pulls the requested tag (with retries), starts it with `--wait`, and if the new release does not become healthy it restores the previous images and exits non-zero. `SKIP_PULL=1` uses images already on the host.
-
-Server setup is one directory: copy `compose.prod.yaml`, `Caddyfile`, `deploy.sh`, `backup.sh`, `restore.sh` and a `.env` filled from `.env.example` (the bundle artifact contains them). Point the domain's DNS at the server; Caddy obtains the certificate. Private registries use `REGISTRY_USER` and `REGISTRY_TOKEN`. The full procedure, including scheduled backups and restore, is in [deployment.md](deployment.md).
-
-## Verified locally
-
-- The two images build and pass all 10 Playwright tests in production mode.
-- `deploy.sh` brings the full stack (proxy, updater, database) up healthy over HTTPS, and a deliberately broken release is rejected and rolled back automatically.
-- Workflows pass `actionlint`; `deploy.sh` passes shellcheck.
-
-Not exercised here: the GitHub-hosted runs themselves, GHCR pushes and a real server.
+Self-hosting on a single server is optional; see [../deploy/README.md](../deploy/README.md).

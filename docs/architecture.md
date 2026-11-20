@@ -6,16 +6,15 @@ A modular monolith: one NestJS API, one Next.js web application, one PostgreSQL 
 
 ```mermaid
 flowchart LR
-    HR[HR manager's browser] -->|HTTPS| PROXY[Caddy<br/>automatic TLS]
-    PROXY --> WEB[Next.js web app<br/>server-rendered pages<br/>/api/v1 proxy]
-    WEB -->|private network| API[NestJS API]
+    HR[HR manager's browser] -->|HTTPS| WEB[Next.js web app on Vercel<br/>server-rendered pages<br/>/api/v1 proxy]
+    WEB -->|HTTPS| API[NestJS API on Render]
     API --> DB[(PostgreSQL)]
-    BACKUP[Backup sidecar] --> DB
-    UPDATER[Updater] -.->|pulls new images| REGISTRY[(GHCR)]
-    CI[GitHub Actions] -->|publishes images| REGISTRY
+    API -.->|profile pictures, optional| S3[(S3-compatible storage)]
+    GH[GitHub Actions] -->|CI, then deploy hook| API
+    GH -->|smoke check| WEB
 ```
 
-Only Caddy is exposed. The API and database are on a private network. The browser talks to one origin: pages are rendered on the server, and browser calls to `/api/v1/*` are forwarded by the web app to the API. This keeps cookies same-site, removes the need for cross-origin access, and lets one image run in any environment because the API address is read at runtime.
+The browser talks to one origin: pages are rendered on the server, and browser calls to `/api/v1/*` are forwarded by the web app to the API. This keeps cookies same-site, removes the need for cross-origin access, and lets one build run in any environment because the API address (`API_ORIGIN`) is read at runtime.
 
 ## Backend modules
 
@@ -123,6 +122,30 @@ If anything fails, the transaction rolls back and the response uses the same err
 
 Server components fetch data with the user's cookie and render pages; forms are small client components. Generic building blocks keep the code short and typed: `useGenericState`, `useFormFields`, a typed `httpRequest` that unwraps the envelope, `useApiAction`, and generic `Mapping`, `DataTable` and `BarList` components.
 
-## Deployment topology
+## Deployment
 
-`deploy/compose.prod.yaml` runs Caddy, web, API, PostgreSQL, the backup sidecar and the updater on one host. The application containers are read-only, run as an unprivileged user, drop all capabilities and are not published to the host. See [ci-cd.md](ci-cd.md) and [deployment.md](deployment.md).
+- **Web:** a Vercel project rooted at `apps/web`, redeployed by Vercel on every push to `master`.
+- **API:** a Render web service built from `apps/api/Dockerfile`. CD calls its deploy hook after CI passes, then smoke-checks both apps. On Render's free plan the service sleeps when idle, so the first request after a pause is slow.
+- **Local:** `docker-compose-infra.yml` runs PostgreSQL and RustFS; `docker-compose.yml` adds the API and web images.
+- **Self-hosting (optional):** `deploy/` holds a Caddy, backup and restore setup for a single server. See [ci-cd.md](ci-cd.md).
+
+The API migrates the database on every start, creates the first HR manager from `INITIAL_HR_EMAIL` and `INITIAL_HR_PASSWORD`, and seeds demo data only when none exists. Profile pictures are stored in S3-compatible storage and are switched off when no `S3_*` settings are given; the API reports this at `GET /features` so the UI hides the upload control.
+
+## Decisions
+
+| Decision                                                                                 | Why                                                                                              | Cost                                                                                                                         |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Modular monolith: one API, one web app, one database                                     | One persona and 10,000 employees do not justify microservices or a broker                        | Modules can be split later along their boundaries                                                                            |
+| NestJS and Next.js, TypeScript end to end, shared `packages/contracts`                   | Guards, pipes and interceptors map to the cross-cutting needs; one language and one set of types |                                                                                                                              |
+| Kysely, not a full ORM                                                                   | The important queries are aggregates, window functions and a shared "current compensation" join  | More explicit SQL, fully typed                                                                                               |
+| Pay is grouped by currency and frequency, never converted                                | Any converted total would look authoritative and be wrong                                        | More dashboard rows, no false numbers                                                                                        |
+| Compensation is a dated history, overlaps forbidden by an exclusion constraint           | History and audit come naturally                                                                 | Backdated corrections are future work                                                                                        |
+| Append-only audit log enforced by a trigger, written in the same transaction             | The application cannot alter its own history                                                     |                                                                                                                              |
+| Sessions: HttpOnly SameSite=Strict JWT with a per-user session version                   | Revocable without a session table; no tokens readable by scripts                                 | Signing out ends all of a user's sessions                                                                                    |
+| Web app proxies the API at runtime                                                       | One build for every environment, one origin for the browser                                      | The proxy caps body size (2 MB for avatar uploads, 100 KB otherwise)                                                         |
+| Migrations and seed run automatically on start                                           | An empty database becomes a working system with no manual step                                   | Migrations must stay backward compatible                                                                                     |
+| Strict TypeScript 7 with type-aware oxlint (no `any`, assertions or non-null assertions) | typescript-eslint does not support TypeScript 7 yet                                              |                                                                                                                              |
+| Offset pagination, live aggregates, no cache                                             | Measured at 10,000 rows, queries take tens of milliseconds ([performance.md](performance.md))    | Keyset pagination and caching are next if data grows by orders of magnitude                                                  |
+| Full country and currency lists as plain data files (247 countries, 153 currencies)      | HR may hire anyone, anywhere; a short list would block the first unanticipated country           | A correction is a data edit and a release. The exchange rates only make synthetic salaries plausible; the app never converts |
+| Profile pictures in optional S3 storage, keyed per employee                              | Keeps binary data out of PostgreSQL; the feature degrades cleanly when storage is absent         | Needs an S3-compatible service to turn on                                                                                    |
+| Render for the API, Vercel for the web                                                   | Both free to start and deploy from Git                                                           | The free API sleeps when idle                                                                                                |

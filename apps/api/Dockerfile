@@ -17,7 +17,6 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 
 FROM deps AS build
 COPY tsconfig.base.json ./
-COPY scripts scripts
 COPY packages/contracts packages/contracts
 COPY apps/api apps/api
 RUN pnpm --filter @acme/contracts build && pnpm --filter @acme/api build

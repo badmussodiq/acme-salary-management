@@ -5,6 +5,7 @@ import type {
   EmployeeSummaryDto,
   ListEmployeesQuery,
 } from '@acme/contracts';
+import { Avatar } from '@/components/avatar';
 import { DataTable, type DataTableColumn } from '@acme/web-utils';
 import { Badge, buttonClass, Card, LinkButton, PageHeader, TABLE_CLASS } from '@/components/ui';
 import {
@@ -41,9 +42,12 @@ const columnsFor = (query: ListEmployeesQuery): readonly DataTableColumn<Employe
     key: 'name',
     header: sortable(query, 'name', 'Name'),
     cell: (row) => (
-      <Link href={`/employees/${row.id}`} className="font-medium text-brand-700 hover:underline">
-        {fullName(row)}
-      </Link>
+      <span className="flex items-center gap-3">
+        <Avatar employee={row} />
+        <Link href={`/employees/${row.id}`} className="font-medium text-brand-700 hover:underline">
+          {fullName(row)}
+        </Link>
+      </span>
     ),
   },
   {

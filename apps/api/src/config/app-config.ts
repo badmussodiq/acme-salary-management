@@ -36,6 +36,16 @@ export interface AppConfig {
   readonly initialHr: InitialHr | undefined;
   readonly seedDemoData: boolean;
   readonly seedEmployeeCount: number;
+  readonly s3: S3Settings | undefined;
+}
+
+export interface S3Settings {
+  readonly endpoint: string | undefined;
+  readonly region: string;
+  readonly bucket: string;
+  readonly accessKeyId: string;
+  readonly secretAccessKey: string;
+  readonly forcePathStyle: boolean;
 }
 
 export interface InitialHr {
@@ -61,6 +71,14 @@ class RawEnvironment {
   @Type(() => Number) @IsInt() @Min(1) @Max(168) SESSION_TTL_HOURS = 8;
   @IsOptional() @IsIn(['true', 'false']) SEED_DEMO_DATA?: string;
   @Type(() => Number) @IsInt() @Min(1) @Max(100_000) SEED_EMPLOYEE_COUNT = 10_000;
+  @IsOptional()
+  @IsUrl({ require_tld: false, protocols: ['http', 'https'], require_protocol: true })
+  S3_ENDPOINT?: string;
+  @IsString() @MinLength(2) @MaxLength(64) S3_REGION = 'us-east-1';
+  @IsOptional() @IsString() @MinLength(3) @MaxLength(63) S3_BUCKET?: string;
+  @IsOptional() @IsString() @MinLength(3) @MaxLength(128) S3_ACCESS_KEY_ID?: string;
+  @IsOptional() @IsString() @MinLength(8) @MaxLength(256) S3_SECRET_ACCESS_KEY?: string;
+  @IsOptional() @IsIn(['true', 'false']) S3_FORCE_PATH_STYLE?: string;
   @IsOptional() @IsEmail() INITIAL_HR_EMAIL?: string;
   @IsOptional() @IsString() @MinLength(12) @MaxLength(128) INITIAL_HR_PASSWORD?: string;
 }
@@ -68,6 +86,31 @@ class RawEnvironment {
 const DEVELOPMENT_HR: InitialHr = { email: 'hr@acme.test', password: 'Dev-Only-Passw0rd!' };
 
 const PRODUCTION_REQUIRED = ['DATABASE_URL', 'WEB_ORIGIN', 'JWT_SECRET'] as const;
+
+const DEVELOPMENT_S3: S3Settings = {
+  endpoint: 'http://localhost:9000',
+  region: 'us-east-1',
+  bucket: 'acme-salary',
+  accessKeyId: 'acme-dev',
+  secretAccessKey: 'acme-dev-secret-key',
+  forcePathStyle: true,
+};
+
+const resolveS3 = (raw: RawEnvironment): S3Settings | undefined => {
+  if (raw.S3_BUCKET && raw.S3_ACCESS_KEY_ID && raw.S3_SECRET_ACCESS_KEY) {
+    return {
+      endpoint: raw.S3_ENDPOINT,
+      region: raw.S3_REGION,
+      bucket: raw.S3_BUCKET,
+      accessKeyId: raw.S3_ACCESS_KEY_ID,
+      secretAccessKey: raw.S3_SECRET_ACCESS_KEY,
+      forcePathStyle: raw.S3_FORCE_PATH_STYLE
+        ? raw.S3_FORCE_PATH_STYLE === 'true'
+        : raw.S3_ENDPOINT !== undefined,
+    };
+  }
+  return raw.NODE_ENV === 'development' ? DEVELOPMENT_S3 : undefined;
+};
 
 const resolveInitialHr = (raw: RawEnvironment): InitialHr | undefined => {
   if (raw.INITIAL_HR_EMAIL && raw.INITIAL_HR_PASSWORD) {
@@ -118,5 +161,6 @@ export const loadAppConfig = (env: NodeJS.ProcessEnv): AppConfig => {
         ? raw.NODE_ENV === 'development'
         : raw.SEED_DEMO_DATA === 'true',
     seedEmployeeCount: raw.SEED_EMPLOYEE_COUNT,
+    s3: resolveS3(raw),
   };
 };

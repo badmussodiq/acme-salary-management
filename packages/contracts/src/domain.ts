@@ -1,4 +1,5 @@
-import { COUNTRIES, CURRENCY_CODES, CURRENCY_NAMES } from './world.generated';
+import { COUNTRIES } from './countries';
+import { CURRENCY_CODES, CURRENCY_NAMES } from './currencies';
 
 export { COUNTRIES, CURRENCY_CODES, CURRENCY_NAMES };
 
@@ -26,6 +27,7 @@ export const AUDIT_ACTIONS = [
   'employee.created',
   'employee.updated',
   'compensation.added',
+  'employee.avatar_changed',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

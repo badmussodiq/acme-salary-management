@@ -14,3 +14,6 @@ next-env.d.ts
 deploy/.release
 *.tsbuildinfo
 docs/demo/*.webm
+
+.env.production
+**/.env.production

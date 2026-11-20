@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 COMPOSE=(docker compose --env-file .env -f compose.prod.yaml)
-[[ -f .env ]] || { echo "restore: .env is missing (see .env.example)" >&2; exit 1; }
+[[ -f .env ]] || { echo "restore: .env is missing (see deploy/README.md)" >&2; exit 1; }
 [[ -f .release ]] && IMAGE_TAG="$(<.release)" && export IMAGE_TAG
 
 in_backup_container() {

@@ -10,7 +10,7 @@ WAIT_TIMEOUT="${WAIT_TIMEOUT:-180}"
 SERVICES=(api web)
 COMPOSE=(docker compose --env-file .env -f compose.prod.yaml)
 
-[[ -f .env ]] || { echo "deploy: .env is missing (see .env.example)" >&2; exit 1; }
+[[ -f .env ]] || { echo "deploy: .env is missing (see deploy/README.md)" >&2; exit 1; }
 export IMAGE_TAG="$TAG"
 
 snapshot_running_images() {

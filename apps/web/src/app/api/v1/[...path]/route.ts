@@ -1,5 +1,6 @@
 import { apiUrl } from '@/lib/api-config';
-import { readBodyWithLimit } from '@/lib/body-limit';
+import { AVATAR_MAX_BYTES } from '@acme/contracts';
+import { readBodyWithLimit, MAX_PROXY_BODY_BYTES } from '@/lib/body-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,8 +42,10 @@ const forward = async (
     if (!STRIPPED_REQUEST_HEADERS.has(key)) headers.set(key, value);
   });
 
+  const isAvatarUpload = request.method === 'PUT' && path.at(-1) === 'avatar';
+  const limit = isAvatarUpload ? AVATAR_MAX_BYTES : MAX_PROXY_BODY_BYTES;
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
-  const body = hasBody ? await readBodyWithLimit(request) : undefined;
+  const body = hasBody ? await readBodyWithLimit(request, limit) : undefined;
   if (body?.kind === 'too-large') {
     return errorResponse(413, 'PAYLOAD_TOO_LARGE', 'The request body is too large');
   }

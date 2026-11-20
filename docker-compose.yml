@@ -1,0 +1,44 @@
+# The whole application. Infrastructure comes from docker-compose-infra.yml.
+name: acme
+
+include:
+  - docker-compose-infra.yml
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: ${API_IMAGE:-acme-salary-api:local}
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://acme:acme@postgres:5432/acme
+      WEB_ORIGIN: http://localhost:3000
+      JWT_SECRET: ${JWT_SECRET:-local-only-secret-that-is-at-least-32-characters-long}
+      INITIAL_HR_EMAIL: ${INITIAL_HR_EMAIL:-hr@acme.test}
+      INITIAL_HR_PASSWORD: ${INITIAL_HR_PASSWORD:-Dev-Only-Passw0rd!}
+      SEED_DEMO_DATA: 'true'
+      TRUST_PROXY_HOPS: '1'
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT:-100000}
+      S3_ENDPOINT: http://rustfs:9000
+      S3_BUCKET: acme-salary
+      S3_ACCESS_KEY_ID: acme-dev
+      S3_SECRET_ACCESS_KEY: acme-dev-secret-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rustfs:
+        condition: service_started
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: ${WEB_IMAGE:-acme-salary-web:local}
+    environment:
+      API_ORIGIN: http://api:3001
+    ports:
+      - '3000:3000'
+    depends_on:
+      api:
+        condition: service_healthy

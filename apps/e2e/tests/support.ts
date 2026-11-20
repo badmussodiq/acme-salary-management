@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { crc32, deflateSync } from 'node:zlib';
 import { expect, type Locator, type Page } from '@playwright/test';
 
 export interface Credentials {
@@ -42,3 +43,33 @@ export const uniqueSuffix = (): string =>
   Date.now()
     .toString(26)
     .replace(/[0-9]/g, (digit) => String.fromCharCode(97 + Number(digit)));
+
+const pngChunk = (type: string, data: Buffer): Buffer => {
+  const body = Buffer.concat([Buffer.from(type), data]);
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body));
+  return Buffer.concat([length, body, crc]);
+};
+
+export const solidPng = (
+  size: number,
+  [red, green, blue]: readonly [number, number, number],
+): Buffer => {
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
+  header.set([8, 2, 0, 0, 0], 8);
+  const row = Buffer.concat([
+    Buffer.from([0]),
+    Buffer.from(Array.from({ length: size }, () => [red, green, blue]).flat()),
+  ]);
+  const raw = Buffer.concat(Array.from({ length: size }, () => row));
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk('IHDR', header),
+    pngChunk('IDAT', deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+};

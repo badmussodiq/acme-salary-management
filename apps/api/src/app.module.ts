@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuditModule } from './audit/audit.module';
+import { AvatarModule } from './avatar/avatar.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { OriginGuard } from './auth/origin.guard';
@@ -14,6 +15,7 @@ import { EmployeesModule } from './employees/employees.module';
 import { HealthModule } from './health/health.module';
 import { InsightsModule } from './insights/insights.module';
 import { SeedModule } from './seed/seed.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -25,9 +27,11 @@ import { SeedModule } from './seed/seed.module';
       ],
     }),
     DatabaseModule,
+    StorageModule,
     AuthModule,
     AuditModule,
     EmployeesModule,
+    AvatarModule,
     InsightsModule,
     SeedModule,
     HealthModule,

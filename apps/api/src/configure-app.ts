@@ -1,4 +1,5 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { AVATAR_MAX_BYTES, AVATAR_MIME_TYPES } from '@acme/contracts';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { noStoreMiddleware } from './common/no-store';
@@ -35,6 +36,7 @@ export const configureApp = (app: NestExpressApplication, config: AppConfig): vo
   app.use(helmet());
   app.use(noStoreMiddleware);
   app.useBodyParser('json', { limit: config.bodyLimit, reviver: rejectForbiddenKeys });
+  app.useBodyParser('raw', { type: [...AVATAR_MIME_TYPES], limit: AVATAR_MAX_BYTES });
   app.enableCors({ origin: config.webOrigin, credentials: true });
   app.setGlobalPrefix(API_PREFIX);
   app.useGlobalPipes(createValidationPipe());

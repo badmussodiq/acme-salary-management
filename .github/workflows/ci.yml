@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths-ignore: ['docs/**', '**/*.md']
   pull_request:
-    branches: [main]
+    branches: [master]
     paths-ignore: ['docs/**', '**/*.md']
   workflow_dispatch:
 
@@ -81,7 +81,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      COMPOSE_FILE: deploy/compose.e2e.yaml
       E2E_EXTERNAL: '1'
     steps:
       - uses: actions/checkout@v7
@@ -110,7 +109,10 @@ jobs:
       - name: Report image sizes
         run: docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep '^acme-salary' | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Generate a throwaway HR password for this run
-        run: echo "E2E_HR_PASSWORD=$(openssl rand -hex 16)" >> "$GITHUB_ENV"
+        run: |
+          pw="$(openssl rand -hex 16)"
+          echo "E2E_HR_PASSWORD=$pw" >> "$GITHUB_ENV"
+          echo "INITIAL_HR_PASSWORD=$pw" >> "$GITHUB_ENV"
       - run: docker compose up -d --wait
       - run: pnpm install --frozen-lockfile --filter @acme/e2e...
       - run: pnpm --filter @acme/e2e exec playwright install --with-deps chromium

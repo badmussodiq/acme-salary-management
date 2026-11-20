@@ -8,7 +8,7 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
-  output: 'standalone',
+  ...(process.env['VERCEL'] ? {} : { output: 'standalone' }),
   outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
   poweredByHeader: false,
   reactStrictMode: true,

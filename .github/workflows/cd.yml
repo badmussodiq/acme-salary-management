@@ -70,61 +70,42 @@ jobs:
           tags: ${{ env.IMAGE }}:sha-${{ env.SHA }}
           cache-from: type=gha,scope=${{ matrix.app }}
 
-  release-bundle:
-    name: Validate the deployment bundle
+  deploy-api:
+    name: Deploy the API to Render
     needs: publish
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ env.SHA }}
-      - name: Lint the deploy scripts
-        run: shellcheck deploy/deploy.sh deploy/restore.sh deploy/backup.sh
-      - name: Validate the production compose file
-        run: |
-          cp deploy/.env.example deploy/.env
-          docker compose --env-file deploy/.env -f deploy/compose.prod.yaml config --quiet
-      - name: Describe the release
-        run: |
-          owner="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
-          mkdir -p bundle
-          cp deploy/compose.prod.yaml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh deploy/restore.sh deploy/.env.example bundle/
-          printf '{"sha":"%s","api":"ghcr.io/%s/acme-salary-api:sha-%s","web":"ghcr.io/%s/acme-salary-web:sha-%s"}\n' \
-            "$SHA" "$owner" "$SHA" "$owner" "$SHA" > bundle/release.json
-      - uses: actions/upload-artifact@v7
-        with:
-          name: deploy-bundle
-          path: bundle
-          retention-days: 30
-
-  deploy:
-    name: Promote to production
-    needs: release-bundle
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: production
-    permissions:
-      contents: read
-      packages: write
     steps:
-      - uses: docker/setup-buildx-action@v4
-      - uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Move the latest tag to this release
+      - name: Trigger the Render deploy hook
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          owner="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
-          for app in api web; do
-            image="ghcr.io/${owner}/acme-salary-${app}"
-            docker buildx imagetools create --tag "${image}:latest" "${image}:sha-${SHA}"
+          test -n "$RENDER_DEPLOY_HOOK_URL" || { echo "RENDER_DEPLOY_HOOK_URL is not set" >&2; exit 1; }
+          curl --fail --silent --show-error --max-time 30 -X POST "$RENDER_DEPLOY_HOOK_URL" > /dev/null
+          echo "Render deploy triggered"
+
+  smoke:
+    name: Post-deploy smoke check
+    needs: deploy-api
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      API_URL: ${{ vars.API_URL }}
+      WEB_URL: ${{ vars.WEB_URL }}
+    steps:
+      - name: Wait for the API to report ready
+        run: |
+          test -n "$API_URL" || { echo "Repository variable API_URL is not set" >&2; exit 1; }
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent --max-time 20 "${API_URL%/}/api/v1/health/ready" | grep -q '"ok"'; then
+              echo "API ready after $attempt attempt(s)"; exit 0
+            fi
+            sleep 15
           done
-      - name: Summarise
+          echo "API did not become ready" >&2; exit 1
+      - name: Check the web app
         run: |
-          {
-            echo "### Release ${SHA}"
-            echo "The \`latest\` tag now points at this release. The updater on the server pulls and restarts the containers on its next poll."
-            echo "To pin or roll back run \`deploy/deploy.sh sha-<commit>\` on the server."
-          } >> "$GITHUB_STEP_SUMMARY"
+          test -n "$WEB_URL" || { echo "Repository variable WEB_URL is not set" >&2; exit 1; }
+          curl --fail --silent --show-error --max-time 60 --retry 5 --retry-delay 10 --retry-all-errors "${WEB_URL%/}/healthz" > /dev/null
+          echo "Web app is up"
