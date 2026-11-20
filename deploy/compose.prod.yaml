@@ -27,6 +27,35 @@ services:
       timeout: 3s
       retries: 20
 
+  backup:
+    <<: *hardened
+    image: postgres:18-alpine
+    restart: unless-stopped
+    entrypoint: ['sh', '/usr/local/bin/backup.sh', 'loop']
+    environment:
+      PGHOST: postgres
+      PGUSER: acme
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: acme
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ./backup.sh:/usr/local/bin/backup.sh:ro
+      - backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - find /backups -name 'acme-*.dump' -mmin -$$((BACKUP_INTERVAL_SECONDS * 2 / 60 + 5)) | grep -q .
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
   api:
     <<: *hardened
     image: ${API_IMAGE:-${IMAGE_REGISTRY:?IMAGE_REGISTRY must be set}/acme-salary-api:${IMAGE_TAG:-latest}}
@@ -34,7 +63,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://acme:${POSTGRES_PASSWORD}@postgres:5432/acme
-      WEB_ORIGIN: https://${DOMAIN:?DOMAIN must be set}
+      WEB_ORIGIN: ${WEB_ORIGIN:-https://${DOMAIN:?DOMAIN must be set}}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       INITIAL_HR_EMAIL: ${INITIAL_HR_EMAIL:?INITIAL_HR_EMAIL must be set}
       INITIAL_HR_PASSWORD: ${INITIAL_HR_PASSWORD:?INITIAL_HR_PASSWORD must be set}
@@ -88,5 +117,6 @@ services:
 
 volumes:
   postgres-data:
+  backups:
   caddy-data:
   caddy-config:

@@ -18,7 +18,8 @@ snapshot_running_images() {
   for service in "${SERVICES[@]}"; do
     container="$("${COMPOSE[@]}" ps -q "$service" 2>/dev/null || true)"
     if [[ -n "$container" ]]; then
-      docker tag "$(docker inspect --format '{{.Image}}' "$container")" "acme-salary-${service}:rollback"
+      docker tag "$(docker inspect --format '{{.Image}}' "$container")" "acme-salary-${service}:rollback" ||
+        echo "deploy: could not snapshot ${service}; rollback will not be available" >&2
     fi
   done
 }
