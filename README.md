@@ -64,6 +64,9 @@ Open http://localhost:3000 and sign in with the development credentials in [.env
 
 ## Hosted demo
 
+- **Live app:** https://acme-salary-management-navy-alpha.vercel.app
+- **Demo video (about 3 minutes):** https://drive.google.com/file/d/1zwmkAc6gBJcI9YGGcRPYVJevvcf3Fc0n/view?usp=drive_link
+
 The API runs on Render's free plan, which puts an idle service to sleep. **The first request after a quiet period can take up to a minute while the backend wakes up.** Sign-in or the first page may be slow once, then it is fast.
 
 ## Honest status
