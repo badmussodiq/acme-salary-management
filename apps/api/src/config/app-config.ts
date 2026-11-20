@@ -43,6 +43,8 @@ export interface InitialHr {
   readonly password: string;
 }
 
+export const DEVELOPMENT_JWT_SECRET = 'development-only-secret-replace-me-before-deploying';
+
 class RawEnvironment {
   @IsIn(NODE_ENVIRONMENTS) NODE_ENV: NodeEnvironment = 'development';
   @Type(() => Number) @IsInt() @Min(1) @Max(65535) PORT = 3001;
@@ -55,8 +57,7 @@ class RawEnvironment {
   @Type(() => Number) @IsInt() @Min(1) THROTTLE_LIMIT = 100;
   @Type(() => Number) @IsInt() @Min(1) @Max(100) DB_POOL_MAX = 10;
   @Type(() => Number) @IsInt() @Min(100) DB_STATEMENT_TIMEOUT_MS = 10_000;
-  @IsString() @MinLength(32) @MaxLength(256) JWT_SECRET =
-    'development-only-secret-replace-me-before-deploying';
+  @IsString() @MinLength(32) @MaxLength(256) JWT_SECRET = DEVELOPMENT_JWT_SECRET;
   @Type(() => Number) @IsInt() @Min(1) @Max(168) SESSION_TTL_HOURS = 8;
   @IsOptional() @IsIn(['true', 'false']) SEED_DEMO_DATA?: string;
   @Type(() => Number) @IsInt() @Min(1) @Max(100_000) SEED_EMPLOYEE_COUNT = 10_000;
@@ -81,6 +82,10 @@ export const loadAppConfig = (env: NodeJS.ProcessEnv): AppConfig => {
     if (missing.length > 0) {
       throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
     }
+  }
+
+  if (env['NODE_ENV'] === 'production' && env['JWT_SECRET'] === DEVELOPMENT_JWT_SECRET) {
+    throw new Error('JWT_SECRET must not be the development default in production');
   }
 
   const raw = plainToInstance(RawEnvironment, env, {

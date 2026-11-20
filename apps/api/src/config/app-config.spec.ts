@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadAppConfig } from './app-config';
+import { DEVELOPMENT_JWT_SECRET, loadAppConfig } from './app-config';
 
 describe('loadAppConfig', () => {
   it('applies development defaults when nothing is set', () => {
@@ -62,6 +62,17 @@ describe('loadAppConfig', () => {
       email: 'boss@example.com',
       password: 'a-long-enough-password',
     });
+  });
+
+  it('refuses the development JWT secret in production', () => {
+    expect(() =>
+      loadAppConfig({
+        NODE_ENV: 'production',
+        DATABASE_URL: 'postgres://u:p@db:5432/x',
+        WEB_ORIGIN: 'https://hr.example.com',
+        JWT_SECRET: DEVELOPMENT_JWT_SECRET,
+      }),
+    ).toThrow('JWT_SECRET must not be the development default in production');
   });
 
   it('requires explicit connection settings in production', () => {

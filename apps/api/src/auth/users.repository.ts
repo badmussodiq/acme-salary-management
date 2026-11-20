@@ -44,6 +44,15 @@ export class UsersRepository {
       .execute();
   }
 
+  async bumpSessionVersion(id: string, currentVersion: number): Promise<void> {
+    await this.database.db
+      .updateTable('users')
+      .set((eb) => ({ session_version: eb('session_version', '+', 1) }))
+      .where('id', '=', id)
+      .where('session_version', '=', currentVersion)
+      .execute();
+  }
+
   async saveLockState(id: string, state: LockState): Promise<void> {
     await this.database.db
       .updateTable('users')

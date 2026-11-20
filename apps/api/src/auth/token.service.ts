@@ -5,6 +5,11 @@ import { APP_CONFIG, type AppConfig } from '../config/app-config';
 const ISSUER = 'acme-salary-management';
 const ALGORITHM = 'HS256';
 
+export interface SessionClaims {
+  readonly userId: string;
+  readonly version: number;
+}
+
 @Injectable()
 export class TokenService {
   private readonly key: Uint8Array;
@@ -15,23 +20,26 @@ export class TokenService {
     this.ttlHours = config.sessionTtlHours;
   }
 
-  issue(userId: string): Promise<string> {
-    return new SignJWT({})
+  issue(claims: SessionClaims): Promise<string> {
+    return new SignJWT({ ver: claims.version })
       .setProtectedHeader({ alg: ALGORITHM })
-      .setSubject(userId)
+      .setSubject(claims.userId)
       .setIssuer(ISSUER)
       .setIssuedAt()
       .setExpirationTime(`${this.ttlHours}h`)
       .sign(this.key);
   }
 
-  async verify(token: string): Promise<string | undefined> {
+  async verify(token: string): Promise<SessionClaims | undefined> {
     try {
       const { payload } = await jwtVerify(token, this.key, {
         issuer: ISSUER,
         algorithms: [ALGORITHM],
       });
-      return payload.sub;
+      const version = payload['ver'];
+      return payload.sub && typeof version === 'number'
+        ? { userId: payload.sub, version }
+        : undefined;
     } catch {
       return undefined;
     }

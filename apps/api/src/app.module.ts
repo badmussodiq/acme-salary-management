@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuditModule } from './audit/audit.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { OriginGuard } from './auth/origin.guard';
 import { RolesGuard } from './auth/roles.guard';
+import { SessionAwareThrottlerGuard } from './auth/session-aware-throttler.guard';
 import { APP_CONFIG, type AppConfig } from './config/app-config';
 import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
@@ -32,7 +33,7 @@ import { SeedModule } from './seed/seed.module';
     HealthModule,
   ],
   providers: [
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: SessionAwareThrottlerGuard },
     { provide: APP_GUARD, useClass: OriginGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

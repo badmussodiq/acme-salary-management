@@ -26,6 +26,6 @@ export class InitialHrService implements OnModuleInit {
       passwordHash: await hashPassword(initialHr.password),
       role: 'hr_manager',
     });
-    this.logger.log(`Created initial HR manager ${initialHr.email}`);
+    this.logger.log('Created the initial HR manager');
   }
 }

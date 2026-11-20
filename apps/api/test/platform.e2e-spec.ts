@@ -101,5 +101,6 @@ describe('security headers', () => {
 
     expect(response.headers['x-content-type-options']).toBe('nosniff');
     expect(response.headers['x-powered-by']).toBeUndefined();
+    expect(response.headers['cache-control']).toBe('no-store');
   });
 });

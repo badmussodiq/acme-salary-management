@@ -20,6 +20,7 @@ export interface UsersTable {
   status: Generated<'active' | 'disabled'>;
   failed_login_count: Generated<number>;
   locked_until: Date | null;
+  session_version: Generated<number>;
   created_at: Generated<Date>;
 }
 

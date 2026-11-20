@@ -74,17 +74,27 @@ describe('readCookie', () => {
 
 describe('TokenService', () => {
   const service = new TokenService(loadAppConfig({}));
+  const claims = { userId: 'user-1', version: 3 };
 
-  it('round-trips the user id', async () => {
-    expect(await service.verify(await service.issue('user-1'))).toBe('user-1');
+  it('round-trips the user id and session version', async () => {
+    expect(await service.verify(await service.issue(claims))).toEqual(claims);
   });
 
   it('rejects tampered and foreign tokens', async () => {
-    const token = await service.issue('user-1');
+    const token = await service.issue(claims);
     const other = new TokenService(loadAppConfig({ JWT_SECRET: 'z'.repeat(40) }));
 
     expect(await service.verify(`${token}x`)).toBeUndefined();
     expect(await other.verify(token)).toBeUndefined();
     expect(await service.verify('not-a-token')).toBeUndefined();
+  });
+
+  it('rejects an unsigned token claiming to be valid', async () => {
+    const header = Buffer.from('{"alg":"none","typ":"JWT"}').toString('base64url');
+    const body = Buffer.from('{"sub":"user-1","ver":3,"iss":"acme-salary-management"}').toString(
+      'base64url',
+    );
+
+    expect(await service.verify(`${header}.${body}.`)).toBeUndefined();
   });
 });
