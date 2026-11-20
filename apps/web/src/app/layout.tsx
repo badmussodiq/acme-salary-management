@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Toaster } from 'sonner';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'ACME Salary Management',
@@ -8,7 +10,10 @@ export const metadata: Metadata = {
 
 const RootLayout = ({ children }: { readonly children: ReactNode }) => (
   <html lang="en">
-    <body>{children}</body>
+    <body>
+      {children}
+      <Toaster richColors position="top-right" />
+    </body>
   </html>
 );
 

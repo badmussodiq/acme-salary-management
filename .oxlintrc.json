@@ -25,7 +25,7 @@
     "import/no-unassigned-import": [
       "error",
       {
-        "allow": ["reflect-metadata"]
+        "allow": ["reflect-metadata", "**/*.css"]
       }
     ],
     "typescript/no-unnecessary-type-parameters": "off",
