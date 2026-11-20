@@ -4,7 +4,7 @@
 
 **Assessment:** Incubyte — Software Craftsperson / Node / React / TypeScript II  
 **Document type:** Requirements, solution design and execution plan  
-**Status:** Proposed approach — implementation has not started
+**Status:** Phase 2 (foundation) complete; Phase 3 (core workflow) next
 
 ---
 
@@ -549,7 +549,7 @@ flowchart TD
 - Build Docker images.
 - Run dependency audit (`pnpm audit`), secret scanning and container image vulnerability scans; fail on high severity.
 - Run security tests: 401/403 on every protected route, rate-limit 429 behaviour, validation rejection of unknown and oversized fields, injection payloads against search and sort parameters.
-- Enforce strict TypeScript with `no-explicit-any` and a no-comments lint rule.
+- Enforce strict TypeScript 7 and type-aware oxlint rules: no `any`, no type assertions, no non-null assertions, no floating promises.
 - Publish test results and useful build artifacts.
 
 Do not deploy from untrusted pull requests. Keep CI permissions minimal.

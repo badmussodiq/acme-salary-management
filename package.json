@@ -12,9 +12,10 @@
     "format:fix": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "db:up": "docker compose up -d --wait",
     "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "dev:api": "pnpm --filter @acme/api start:dev",
-    "dev:web": "pnpm --filter @acme/web dev"
+    "dev:api": "pnpm --filter @acme/contracts build && pnpm --filter @acme/api start:dev",
+    "dev:web": "pnpm --filter @acme/contracts build && pnpm --filter @acme/web dev"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
