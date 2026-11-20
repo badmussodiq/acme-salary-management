@@ -25,6 +25,20 @@ This project was built with Claude Code (Claude Sonnet 5.5) working in the repos
 
 One item is unresolved: once, the first dashboard load after seeding hit the 10-second statement timeout. It could not be reproduced, so the seed now runs `ANALYZE` and the 10,000-row performance test would flag a recurrence.
 
+## Representative prompts
+
+Paraphrased from the actual sessions; credentials and private paths are omitted.
+
+- "Create a plan first: requirements, architecture, CI/CD, security. Say what we are leaving out and why. We are using NestJS with server-side rendering."
+- "Follow the patterns of my other project: a generic state hook, a typed API client, a generic table and mapping component. Use strong typing and keep comments short."
+- "Add rate limiting, a standard response for 401 and 403, strict validation, and protection against injection and denial of service."
+- "Use the newest TypeScript and compatible dependencies."
+- "Nothing may need a manual step: migrations, seeding and the first admin must happen when the app starts."
+- "Write the CI with unit, integration and browser tests, keep the Docker images small, and add CD that deploys after CI passes."
+- "Every country in the world must be available, with its currency."
+- "Add profile pictures stored in Neon object storage; create the bucket at startup, programmatically."
+- "Start the next phase" after each verified result.
+
 ## What stayed human
 
 - Which problem to solve and what to leave out, including widening the scope to every country.
