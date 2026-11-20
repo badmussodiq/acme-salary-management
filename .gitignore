@@ -10,3 +10,4 @@ coverage
 .idea
 .claude
 .api.log
+next-env.d.ts
