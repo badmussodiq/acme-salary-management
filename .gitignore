@@ -7,3 +7,5 @@ coverage
 *.log
 .turbo
 .DS_Store
+.idea
+.claude
