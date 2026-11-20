@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  dashboardHref,
   distributionQueryString,
   parseDashboardFilters,
   toDistributionQuery,
@@ -13,6 +14,7 @@ describe('parseDashboardFilters', () => {
       department: undefined,
       jobTitle: undefined,
       status: 'active',
+      showAllRows: false,
     });
   });
 
@@ -48,5 +50,26 @@ describe('toDistributionQuery', () => {
     expect(distributionQueryString(toDistributionQuery(parseDashboardFilters({})))).toBe(
       'groupBy=countryCode&employmentStatus=active',
     );
+  });
+});
+
+describe('showing every summary row', () => {
+  it('is off unless asked for', () => {
+    expect(parseDashboardFilters({}).showAllRows).toBe(false);
+    expect(parseDashboardFilters({ rows: 'all' }).showAllRows).toBe(true);
+    expect(parseDashboardFilters({ rows: 'everything' }).showAllRows).toBe(false);
+  });
+
+  it('builds links that keep the filters', () => {
+    const filters = parseDashboardFilters({
+      countryCode: 'NG',
+      department: 'Sales',
+      status: 'all',
+    });
+
+    expect(dashboardHref(filters, true)).toBe(
+      '/dashboard?groupBy=countryCode&status=all&countryCode=NG&department=Sales&rows=all',
+    );
+    expect(dashboardHref(filters, false)).not.toContain('rows=');
   });
 });

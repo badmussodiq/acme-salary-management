@@ -9,10 +9,11 @@ export interface BarListProps<T> {
   readonly formatValue?: (value: number) => string;
   readonly empty?: ReactNode;
   readonly className?: string;
+  readonly scaleTo?: number;
 }
 
 export const barWidthPercent = (value: number, maximum: number): number =>
-  maximum <= 0 ? 0 : Math.max(2, Math.round((value / maximum) * 100));
+  maximum <= 0 ? 0 : Math.min(100, Math.max(2, Math.round((value / maximum) * 100)));
 
 export const BarList = <T,>({
   items,
@@ -22,8 +23,9 @@ export const BarList = <T,>({
   formatValue = (amount) => amount.toLocaleString('en'),
   empty,
   className,
+  scaleTo,
 }: BarListProps<T>) => {
-  const maximum = Math.max(0, ...items.map(value));
+  const maximum = scaleTo ?? Math.max(0, ...items.map(value));
 
   return (
     <ul className={className}>

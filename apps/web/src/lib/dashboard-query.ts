@@ -17,6 +17,7 @@ export interface DashboardFilters {
   readonly department: string | undefined;
   readonly jobTitle: string | undefined;
   readonly status: EmploymentStatus | typeof ALL_STATUSES;
+  readonly showAllRows: boolean;
 }
 
 const first = (value: string | readonly string[] | undefined): string | undefined =>
@@ -34,6 +35,7 @@ export const parseDashboardFilters = (raw: RawSearchParams): DashboardFilters =>
     jobTitle: first(raw['jobTitle']),
     status:
       status === ALL_STATUSES ? ALL_STATUSES : (oneOf(EMPLOYMENT_STATUSES, status) ?? 'active'),
+    showAllRows: first(raw['rows']) === 'all',
   };
 };
 
@@ -51,4 +53,15 @@ export const distributionQueryString = (query: DistributionQuery): string => {
     if (value !== undefined) params.set(key, String(value));
   }
   return params.toString();
+};
+
+export const SUMMARY_ROW_LIMIT = 25;
+
+export const dashboardHref = (filters: DashboardFilters, showAllRows: boolean): string => {
+  const params = new URLSearchParams({ groupBy: filters.groupBy, status: filters.status });
+  if (filters.countryCode) params.set('countryCode', filters.countryCode);
+  if (filters.department) params.set('department', filters.department);
+  if (filters.jobTitle) params.set('jobTitle', filters.jobTitle);
+  if (showAllRows) params.set('rows', 'all');
+  return `/dashboard?${params.toString()}`;
 };

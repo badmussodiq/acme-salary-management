@@ -1,4 +1,5 @@
 import type { AuditEventDto, CompensationDto, EmployeeDetailDto } from '@acme/contracts';
+import { currencyOfCountry } from '@acme/contracts';
 import { DataTable, type DataTableColumn } from '@acme/web-utils';
 import { Badge, Card, LinkButton, PageHeader, TABLE_CLASS } from '@/components/ui';
 import { AUDIT_ACTION_LABELS, describeAuditEvent } from '@/lib/audit';
@@ -105,7 +106,7 @@ const EmployeePage = async ({ params }: { readonly params: Promise<{ readonly id
         <Card title="Add compensation">
           <AddCompensationForm
             employeeId={employee.id}
-            defaultCurrency={current?.currencyCode ?? 'NGN'}
+            defaultCurrency={current?.currencyCode ?? currencyOfCountry(employee.countryCode)}
             defaultFrequency={current?.payFrequency ?? 'annual'}
           />
         </Card>

@@ -8,7 +8,10 @@ import type {
 } from '@acme/contracts';
 import { BarList, DataTable, type DataTableColumn } from '@acme/web-utils';
 import { Card, PageHeader, TABLE_CLASS } from '@/components/ui';
+import { scaleOf, topWithRemainder, type BarItem } from '@/lib/bar-items';
 import {
+  SUMMARY_ROW_LIMIT,
+  dashboardHref,
   distributionQueryString,
   parseDashboardFilters,
   toDistributionQuery,
@@ -55,6 +58,10 @@ const groupLabel = (grouping: string, group: string | null): string => {
   return grouping === 'countryCode' ? countryName(group) : group;
 };
 
+const barLabel = (item: BarItem): string => item.label;
+const barValue = (item: BarItem): number => item.value;
+const barKey = (item: BarItem): string => item.key;
+
 const outlierColumns: readonly DataTableColumn<OutlierDto>[] = [
   {
     key: 'name',
@@ -97,6 +104,28 @@ const DashboardPage = async ({
     serverData<EmployeeFacetsDto>('/employees/facets'),
   ]);
 
+  const rows = distribution.toSorted((a, b) => b.headcount - a.headcount);
+  const visibleRows = filters.showAllRows ? rows : rows.slice(0, SUMMARY_ROW_LIMIT);
+
+  const countryBars = topWithRemainder(
+    overview.byCountry.map((entry) => ({
+      key: entry.key,
+      label: countryName(entry.key),
+      value: entry.headcount,
+    })),
+    10,
+    (count) => `${count} other countries`,
+  );
+  const payMixBars = topWithRemainder(
+    overview.payMix.map((entry) => ({
+      key: `${entry.currencyCode}-${entry.payFrequency}`,
+      label: `${entry.currencyCode} · ${FREQUENCY_LABEL[entry.payFrequency]}`,
+      value: entry.headcount,
+    })),
+    10,
+    (count) => `${count} other currency and frequency combinations`,
+  );
+
   const distributionColumns: readonly DataTableColumn<DistributionRowDto>[] = [
     {
       key: 'group',
@@ -138,10 +167,11 @@ const DashboardPage = async ({
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
         <Card title="Headcount by country">
           <BarList
-            items={overview.byCountry}
-            label={(entry) => countryName(entry.key)}
-            value={(entry) => entry.headcount}
-            keyExtractor={(entry) => entry.key}
+            items={countryBars}
+            scaleTo={scaleOf(countryBars)}
+            label={barLabel}
+            value={barValue}
+            keyExtractor={barKey}
             empty={<li className="text-sm text-slate-500">No employees yet.</li>}
           />
         </Card>
@@ -156,10 +186,11 @@ const DashboardPage = async ({
         </Card>
         <Card title="Pay currency and frequency">
           <BarList
-            items={overview.payMix}
-            label={(entry) => `${entry.currencyCode} · ${FREQUENCY_LABEL[entry.payFrequency]}`}
-            value={(entry) => entry.headcount}
-            keyExtractor={(entry) => `${entry.currencyCode}-${entry.payFrequency}`}
+            items={payMixBars}
+            scaleTo={scaleOf(payMixBars)}
+            label={barLabel}
+            value={barValue}
+            keyExtractor={barKey}
             empty={<li className="text-sm text-slate-500">No compensation yet.</li>}
           />
         </Card>
@@ -175,7 +206,7 @@ const DashboardPage = async ({
           <DataTable
             className={TABLE_CLASS}
             columns={distributionColumns}
-            data={distribution}
+            data={visibleRows}
             keyExtractor={(row) => `${row.group ?? 'all'}-${row.currencyCode}-${row.payFrequency}`}
             empty={
               <p className="py-6 text-center text-sm text-slate-500">
@@ -184,6 +215,20 @@ const DashboardPage = async ({
             }
           />
         </div>
+        {rows.length > SUMMARY_ROW_LIMIT ? (
+          <p className="mt-3 text-sm text-slate-600">
+            {filters.showAllRows
+              ? `Showing all ${rows.length.toLocaleString('en')} rows. `
+              : `Showing the ${SUMMARY_ROW_LIMIT} largest of ${rows.length.toLocaleString('en')} rows. `}
+            <Link
+              href={dashboardHref(filters, !filters.showAllRows)}
+              className="text-brand-700 hover:underline"
+            >
+              {filters.showAllRows ? 'Show fewer' : 'Show all'}
+            </Link>
+            {' or narrow the filters.'}
+          </p>
+        ) : null}
       </Card>
 
       <Card title="Data quality">

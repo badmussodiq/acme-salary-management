@@ -1,6 +1,7 @@
 import {
   COUNTRIES,
   CURRENCY_CODES,
+  CURRENCY_NAMES,
   EMPLOYMENT_STATUSES,
   PAY_FREQUENCIES,
   type CountryCode,
@@ -23,7 +24,7 @@ export const COUNTRY_OPTIONS: readonly Option<CountryCode>[] = COUNTRIES.map((co
 
 export const CURRENCY_OPTIONS: readonly Option<CurrencyCode>[] = CURRENCY_CODES.map((code) => ({
   value: code,
-  label: code,
+  label: `${code} · ${CURRENCY_NAMES[code]}`,
 }));
 
 export const FREQUENCY_OPTIONS: readonly Option<PayFrequency>[] = PAY_FREQUENCIES.map((value) => ({

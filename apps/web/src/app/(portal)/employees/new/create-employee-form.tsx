@@ -9,6 +9,7 @@ import type {
   EmploymentStatus,
   PayFrequency,
 } from '@acme/contracts';
+import { currencyOfCountry } from '@acme/contracts';
 import { useApiAction, useFormFields } from '@acme/web-utils';
 import { TextField } from '@/components/form-fields';
 import { Button, Card, LinkButton } from '@/components/ui';
@@ -70,7 +71,13 @@ export const CreateEmployeeForm = ({
   readonly jobTitles: readonly string[];
 }) => {
   const router = useRouter();
-  const { values, bind } = useFormFields(INITIAL);
+  const { values, bind, patch } = useFormFields(INITIAL);
+  const countryBinding = {
+    value: values.countryCode,
+    onChange: (countryCode: CountryCode) => {
+      patch({ countryCode, currencyCode: currencyOfCountry(countryCode) });
+    },
+  };
   const { run, pending, fieldErrors } = useApiAction<EmployeeDetailDto, CreateEmployeeRequest>(
     '/api/v1/employees',
     {
@@ -97,7 +104,7 @@ export const CreateEmployeeForm = ({
               firstName: bind('firstName'),
               lastName: bind('lastName'),
               email: bind('email'),
-              countryCode: bind('countryCode'),
+              countryCode: countryBinding,
               department: bind('department'),
               jobTitle: bind('jobTitle'),
               employmentStatus: bind('employmentStatus'),

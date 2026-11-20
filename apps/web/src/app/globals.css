@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@source "../../../../packages/web-utils/src";
 
 @theme {
   --color-brand-50: #eef2ff;

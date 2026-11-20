@@ -69,3 +69,24 @@ describe('BarList', () => {
     expect(html).toBe('<ul><li>No data</li></ul>');
   });
 });
+
+describe('BarList scale', () => {
+  it('can be scaled to a chosen maximum and never overflows its track', () => {
+    const html = renderToStaticMarkup(
+      <BarList
+        items={[
+          { name: 'Big', total: 1000 },
+          { name: 'Small', total: 50 },
+        ]}
+        label={(row) => row.name}
+        value={(row) => row.total}
+        keyExtractor={(row) => row.name}
+        scaleTo={100}
+      />,
+    );
+
+    expect(html).toContain('width:100%');
+    expect(html).toContain('width:50%');
+    expect(html).not.toContain('width:1000%');
+  });
+});
