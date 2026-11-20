@@ -35,7 +35,7 @@ export default defineConfig({
       name: 'sign-in',
       testMatch: /auth\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
-      dependencies: ['setup'],
+      dependencies: ['workflow'],
     },
     {
       name: 'workflow',

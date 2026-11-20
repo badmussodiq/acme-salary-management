@@ -130,4 +130,19 @@ test.describe.serial('HR manager salary workflow', () => {
     await expect(page).toHaveURL(/compensation=missing/);
     await expect(page.getByRole('heading', { name: 'Employees' })).toBeVisible();
   });
+
+  test('renders the dashboard and employee pages without content security violations', async ({
+    page,
+  }) => {
+    const violations: string[] = [];
+    page.on('console', (message) => {
+      if (message.text().includes('Content Security Policy')) violations.push(message.text());
+    });
+
+    await open(page, '/dashboard');
+    await open(page, '/employees');
+    await open(page, '/employees/new');
+
+    expect(violations).toEqual([]);
+  });
 });
