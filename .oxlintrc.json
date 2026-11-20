@@ -8,6 +8,8 @@
     "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
     "typescript/no-floating-promises": "error",
     "no-warning-comments": "error",
+    "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
+    "import/no-unassigned-import": ["error", { "allow": ["reflect-metadata"] }],
     "eqeqeq": "error",
     "no-console": "warn"
   },

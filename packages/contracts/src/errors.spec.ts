@@ -11,8 +11,8 @@ describe('errorCodeForStatus', () => {
     expect(errorCodeForStatus(HTTP_STATUS_BY_ERROR_CODE[code])).toBe(code);
   });
 
-  it('maps unknown server statuses to INTERNAL_ERROR', () => {
-    expect(errorCodeForStatus(503)).toBe('INTERNAL_ERROR');
+  it('maps unmapped server statuses to INTERNAL_ERROR', () => {
+    expect(errorCodeForStatus(502)).toBe('INTERNAL_ERROR');
   });
 
   it('maps unknown client statuses to VALIDATION_FAILED', () => {

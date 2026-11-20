@@ -8,6 +8,7 @@ export const ERROR_CODES = [
   'UNSUPPORTED_MEDIA_TYPE',
   'RATE_LIMITED',
   'INTERNAL_ERROR',
+  'SERVICE_UNAVAILABLE',
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -40,6 +41,7 @@ export const HTTP_STATUS_BY_ERROR_CODE: Readonly<Record<ErrorCode, number>> = {
   UNSUPPORTED_MEDIA_TYPE: 415,
   RATE_LIMITED: 429,
   INTERNAL_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
 };
 
 export const errorCodeForStatus = (status: number): ErrorCode => {
