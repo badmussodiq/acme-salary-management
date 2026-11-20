@@ -209,7 +209,7 @@ test('HR manager walkthrough', async ({ page }) => {
     3200,
   );
   await page.goto(
-    `/employees?search=${encodeURIComponent(`Grace Hopper${suffix}`.replaceAll(/d/g, ''))}`,
+    `/employees?search=${encodeURIComponent(`Grace Hopper${suffix}`.replaceAll(/\d/g, ''))}`,
   );
   await page.waitForLoadState('networkidle');
   await expect(page.getByRole('table').locator('img').first()).toBeVisible();
