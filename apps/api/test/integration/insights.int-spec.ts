@@ -269,6 +269,15 @@ describe('GET /insights/data-quality', () => {
       ['Test High', '1000000.00'],
       ['Test Low', '1000000.00'],
     ]);
+
+    const second = await agent.get('/api/v1/insights/data-quality?page=2&limit=1');
+    expect(second.body.data.outlierMeta).toEqual({ page: 2, limit: 1, total: 2 });
+    expect(second.body.data.outliers.map((row: { name: string }) => row.name)).toEqual([
+      'Test Low',
+    ]);
+
+    const beyond = await agent.get('/api/v1/insights/data-quality?page=3&limit=1');
+    expect(beyond.body.data.outliers).toEqual([]);
   });
 
   it('does not judge groups that are too small to compare', async () => {

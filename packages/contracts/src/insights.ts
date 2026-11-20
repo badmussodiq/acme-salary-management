@@ -1,3 +1,4 @@
+import type { PageMeta } from './response';
 import type { CountryCode, CurrencyCode, EmploymentStatus, PayFrequency } from './domain';
 
 export const DISTRIBUTION_GROUPINGS = ['none', 'countryCode', 'department', 'jobTitle'] as const;
@@ -59,8 +60,9 @@ export interface DataQualityDto {
   readonly inactiveWithCurrentCompensation: number;
   readonly outlierCount: number;
   readonly outliers: readonly OutlierDto[];
+  readonly outlierMeta: PageMeta;
 }
 
 export const OUTLIER_FACTOR = 3;
 export const OUTLIER_MIN_GROUP_SIZE = 5;
-export const OUTLIER_SAMPLE_SIZE = 20;
+export const OUTLIER_PAGE_SIZE = 10;

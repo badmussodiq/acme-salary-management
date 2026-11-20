@@ -7,10 +7,11 @@ import type {
   OverviewDto,
 } from '@acme/contracts';
 import { BarList, DataTable, type DataTableColumn } from '@acme/web-utils';
+import { Pagination } from '@/components/pagination';
 import { Card, PageHeader, TABLE_CLASS } from '@/components/ui';
 import { scaleOf, topWithRemainder, type BarItem } from '@/lib/bar-items';
 import {
-  SUMMARY_ROW_LIMIT,
+  SUMMARY_PAGE_SIZE,
   dashboardHref,
   distributionQueryString,
   parseDashboardFilters,
@@ -18,6 +19,8 @@ import {
 } from '@/lib/dashboard-query';
 import type { RawSearchParams } from '@/lib/directory-query';
 import { countryName, formatMoney, formatPay } from '@/lib/format';
+import { paginate } from '@/lib/pagination';
+import { redirect } from 'next/navigation';
 import { serverData } from '@/lib/server-api';
 import { DashboardFilters } from './dashboard-filters';
 
@@ -100,12 +103,15 @@ const DashboardPage = async ({
     serverData<DistributionRowDto[]>(
       `/insights/salary-distribution?${distributionQueryString(query)}`,
     ),
-    serverData<DataQualityDto>('/insights/data-quality'),
+    serverData<DataQualityDto>(`/insights/data-quality?page=${filters.outlierPage}`),
     serverData<EmployeeFacetsDto>('/employees/facets'),
   ]);
 
   const rows = distribution.toSorted((a, b) => b.headcount - a.headcount);
-  const visibleRows = filters.showAllRows ? rows : rows.slice(0, SUMMARY_ROW_LIMIT);
+  const summary = paginate(rows, filters.summaryPage, SUMMARY_PAGE_SIZE);
+  if (filters.outlierPage > 1 && quality.outliers.length === 0) {
+    redirect(dashboardHref(filters, { outlierPage: 1 }));
+  }
 
   const countryBars = topWithRemainder(
     overview.byCountry.map((entry) => ({
@@ -206,7 +212,7 @@ const DashboardPage = async ({
           <DataTable
             className={TABLE_CLASS}
             columns={distributionColumns}
-            data={visibleRows}
+            data={summary.items}
             keyExtractor={(row) => `${row.group ?? 'all'}-${row.currencyCode}-${row.payFrequency}`}
             empty={
               <p className="py-6 text-center text-sm text-slate-500">
@@ -215,20 +221,11 @@ const DashboardPage = async ({
             }
           />
         </div>
-        {rows.length > SUMMARY_ROW_LIMIT ? (
-          <p className="mt-3 text-sm text-slate-600">
-            {filters.showAllRows
-              ? `Showing all ${rows.length.toLocaleString('en')} rows. `
-              : `Showing the ${SUMMARY_ROW_LIMIT} largest of ${rows.length.toLocaleString('en')} rows. `}
-            <Link
-              href={dashboardHref(filters, !filters.showAllRows)}
-              className="text-brand-700 hover:underline"
-            >
-              {filters.showAllRows ? 'Show fewer' : 'Show all'}
-            </Link>
-            {' or narrow the filters.'}
-          </p>
-        ) : null}
+        <Pagination
+          meta={summary.meta}
+          label="Salary summary"
+          hrefFor={(page) => dashboardHref(filters, { summaryPage: page })}
+        />
       </Card>
 
       <Card title="Data quality">
@@ -253,11 +250,7 @@ const DashboardPage = async ({
           </li>
           <li>
             {quality.outlierCount.toLocaleString('en')} active employees are paid more than 3× or
-            less than a third of the median for their role, currency and frequency
-            {quality.outlierCount > quality.outliers.length
-              ? ` (showing the ${quality.outliers.length} furthest)`
-              : ''}
-            .
+            less than a third of the median for their role, currency and frequency .
           </li>
         </ul>
         <div className="overflow-x-auto">
@@ -269,6 +262,11 @@ const DashboardPage = async ({
             empty={<p className="text-sm text-slate-500">No unusual pay found.</p>}
           />
         </div>
+        <Pagination
+          meta={quality.outlierMeta}
+          label="Unusual salaries"
+          hrefFor={(page) => dashboardHref(filters, { outlierPage: page })}
+        />
       </Card>
     </>
   );

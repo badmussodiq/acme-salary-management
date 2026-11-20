@@ -3,7 +3,6 @@ import { sql, type Expression, type SqlBool } from 'kysely';
 import {
   OUTLIER_FACTOR,
   OUTLIER_MIN_GROUP_SIZE,
-  OUTLIER_SAMPLE_SIZE,
   type CountryCode,
   type CurrencyCode,
   type DataQualityDto,
@@ -15,6 +14,7 @@ import {
   type PayFrequency,
   type PayMixEntry,
 } from '@acme/contracts';
+import type { PageRequest } from '../common/pagination';
 import { DatabaseService } from '../database/database.service';
 import {
   CURRENT_COMPENSATION_SQL,
@@ -166,7 +166,7 @@ export class InsightsRepository {
     );
   }
 
-  async dataQuality(): Promise<DataQualityDto> {
+  async dataQuality(request: PageRequest): Promise<DataQualityDto> {
     const { db } = this.database;
     const [counts, outliers] = await Promise.all([
       withCurrentCompensation(db)
@@ -202,7 +202,7 @@ export class InsightsRepository {
         JOIN medians m USING (job_title, currency_code, pay_frequency)
         WHERE p.amount > m.median * ${OUTLIER_FACTOR} OR p.amount < m.median / ${OUTLIER_FACTOR}
         ORDER BY abs(ln(p.amount / m.median)) DESC, p.employee_number
-        LIMIT ${OUTLIER_SAMPLE_SIZE}
+        LIMIT ${request.limit} OFFSET ${request.offset}
       `.execute(db),
     ]);
 
@@ -210,6 +210,7 @@ export class InsightsRepository {
       activeWithoutCompensation: counts.active_missing,
       inactiveWithCurrentCompensation: counts.inactive_paid,
       outlierCount: outliers.rows[0]?.total ?? 0,
+      outlierMeta: { page: request.page, limit: request.limit, total: outliers.rows[0]?.total ?? 0 },
       outliers: outliers.rows.map((row) => ({
         employeeId: row.employee_id,
         employeeNumber: row.employee_number,

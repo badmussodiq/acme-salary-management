@@ -5,16 +5,20 @@ import type {
   FeaturesDto,
 } from '@acme/contracts';
 import { currencyOfCountry } from '@acme/contracts';
+import { redirect } from 'next/navigation';
 import { DataTable, type DataTableColumn } from '@acme/web-utils';
 import { Avatar } from '@/components/avatar';
+import { Pagination } from '@/components/pagination';
 import { Badge, Card, LinkButton, PageHeader, TABLE_CLASS } from '@/components/ui';
 import { AUDIT_ACTION_LABELS, describeAuditEvent } from '@/lib/audit';
 import { countryName, formatDate, formatDateTime, formatPay, fullName } from '@/lib/format';
-import { serverData } from '@/lib/server-api';
+import { pageFrom } from '@/lib/pagination';
+import type { RawSearchParams } from '@/lib/directory-query';
+import { serverData, serverGet } from '@/lib/server-api';
 import { AddCompensationForm } from './add-compensation-form';
 import { AvatarUpload } from './avatar-upload';
 
-const AUDIT_PAGE_SIZE = 20;
+const AUDIT_PAGE_SIZE = 10;
 
 const compensationColumns: readonly DataTableColumn<CompensationDto>[] = [
   {
@@ -49,14 +53,22 @@ const Detail = ({ label, value }: { readonly label: string; readonly value: stri
   </div>
 );
 
-const EmployeePage = async ({ params }: { readonly params: Promise<{ readonly id: string }> }) => {
+const EmployeePage = async ({
+  params,
+  searchParams,
+}: {
+  readonly params: Promise<{ readonly id: string }>;
+  readonly searchParams: Promise<RawSearchParams>;
+}) => {
   const { id } = await params;
+  const auditPage = pageFrom((await searchParams)['auditPage']);
   const [employee, history, audit, features] = await Promise.all([
     serverData<EmployeeDetailDto>(`/employees/${id}`),
     serverData<CompensationDto[]>(`/employees/${id}/compensation`),
-    serverData<AuditEventDto[]>(`/employees/${id}/audit?limit=${AUDIT_PAGE_SIZE}`),
+    serverGet<AuditEventDto[]>(`/employees/${id}/audit?limit=${AUDIT_PAGE_SIZE}&page=${auditPage}`),
     serverData<FeaturesDto>('/features'),
   ]);
+  if (auditPage > 1 && audit.data.length === 0) redirect(`/employees/${id}`);
   const current = employee.currentCompensation;
 
   return (
@@ -128,10 +140,19 @@ const EmployeePage = async ({ params }: { readonly params: Promise<{ readonly id
           <DataTable
             className={TABLE_CLASS}
             columns={auditColumns}
-            data={audit}
+            data={audit.data}
             keyExtractor={(row) => row.id}
             empty={<p className="text-sm text-slate-500">No changes recorded.</p>}
           />
+          {audit.meta ? (
+            <Pagination
+              meta={audit.meta}
+              label="Audit trail"
+              hrefFor={(page) =>
+                page > 1 ? `/employees/${id}?auditPage=${page}` : `/employees/${id}`
+              }
+            />
+          ) : null}
         </Card>
       </div>
     </>

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   directoryHref,
   nextSortDirection,
-  pageWindow,
   parseDirectoryQuery,
   toQueryString,
 } from './directory-query';
@@ -71,15 +70,5 @@ describe('links', () => {
     expect(nextSortDirection({}, 'name')).toBe('desc');
     expect(nextSortDirection({ sortBy: 'name', sortDir: 'desc' }, 'name')).toBe('asc');
     expect(nextSortDirection({ sortBy: 'name' }, 'department')).toBe('asc');
-  });
-});
-
-describe('pageWindow', () => {
-  it('describes the visible range', () => {
-    expect(pageWindow({ page: 2, limit: 25, total: 60 })).toEqual({ from: 26, to: 50, pages: 3 });
-  });
-
-  it('handles an empty result', () => {
-    expect(pageWindow({ page: 1, limit: 25, total: 0 })).toEqual({ from: 0, to: 0, pages: 1 });
   });
 });

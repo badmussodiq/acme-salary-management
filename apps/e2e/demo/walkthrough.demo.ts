@@ -12,6 +12,12 @@ import {
   typeSlowly,
 } from './narration';
 
+const randomColour = (): [number, number, number] => [
+  40 + Math.floor(Math.random() * 180),
+  40 + Math.floor(Math.random() * 180),
+  40 + Math.floor(Math.random() * 180),
+];
+
 test('HR manager walkthrough', async ({ page }) => {
   const { email, password } = credentials();
   await prepareNarration(page);
@@ -51,7 +57,20 @@ test('HR manager walkthrough', async ({ page }) => {
   await highlight(page.getByText(/never converted or combined across currencies/), 2000);
   await scrollDown(page, 380, 1200);
 
-  await say(page, 'Filter to one country and group by department', 2600);
+  const summaryNav = page.getByRole('navigation', { name: 'Salary summary pagination' });
+  await summaryNav.scrollIntoViewIfNeeded();
+  await say(page, 'Long lists are paginated: the salary summary, one page at a time', 3000);
+  await highlight(summaryNav, 1500);
+  await summaryNav.getByRole('link', { name: 'Next' }).click();
+  await expect(page).toHaveURL(/summaryPage=2/);
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1500);
+
+  await say(
+    page,
+    'Filter to one country and group by department: paging starts again at page one',
+    3000,
+  );
   await page.locator('select[name="groupBy"]').selectOption('department');
   await page.locator('select[name="countryCode"]').selectOption('NG');
   await page.getByRole('button', { name: 'Apply' }).click();
@@ -80,6 +99,26 @@ test('HR manager walkthrough', async ({ page }) => {
   );
   await page.waitForLoadState('networkidle');
   await highlight(page.getByRole('table'), 2200);
+  await say(page, 'Paging stays in step with the filters', 2600);
+  await page.goto('/employees');
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('link', { name: 'Next' }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1500);
+  await page.locator('select[name="countryCode"]').selectOption('NG');
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(page).not.toHaveURL(/page=/);
+  await page.waitForLoadState('networkidle');
+  await say(page, 'A new filter loads fresh results from page one', 2600);
+  await page.getByRole('link', { name: 'Reset' }).click();
+  await expect(page).toHaveURL(/\/employees$/);
+  await page.waitForLoadState('networkidle');
+  await say(page, 'Reset brings back the full, current list', 2600);
+  await page.goto(
+    '/employees?countryCode=US&department=Engineering&employmentStatus=active&currencyCode=USD',
+  );
+  await page.waitForLoadState('networkidle');
   await say(page, 'Sorting by hire date, newest first', 2000);
   await page.getByRole('link', { name: /^Name/ }).click();
   await page.waitForLoadState('networkidle');
@@ -156,18 +195,27 @@ test('HR manager walkthrough', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await say(page, 'Created. The employee number is generated and the creation is audited', 3800);
 
-  await say(
-    page,
-    'Profile pictures upload to S3-compatible storage; initials show until then',
-    3200,
-  );
+  await say(page, 'Profile pictures upload to Neon object storage; initials show until then', 3200);
   await page.getByLabel('Profile picture file').setInputFiles({
     name: 'grace.png',
     mimeType: 'image/png',
-    buffer: solidPng(96, [30, 120, 200]),
+    buffer: solidPng(96, randomColour()),
   });
   await expect(page.getByRole('button', { name: 'Remove' })).toBeVisible();
   await page.waitForTimeout(2500);
+  await say(
+    page,
+    'The picture is stored in the bucket and shown beside the name in the directory',
+    3200,
+  );
+  await page.goto(
+    `/employees?search=${encodeURIComponent(`Grace Hopper${suffix}`.replaceAll(/d/g, ''))}`,
+  );
+  await page.waitForLoadState('networkidle');
+  await expect(page.getByRole('table').locator('img').first()).toBeVisible();
+  await page.waitForTimeout(3000);
+  await page.goBack();
+  await page.waitForLoadState('networkidle');
 
   await say(
     page,

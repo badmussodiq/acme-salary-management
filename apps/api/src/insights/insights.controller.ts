@@ -2,6 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import {
+  OUTLIER_PAGE_SIZE,
   COUNTRY_CODES,
   DISTRIBUTION_GROUPINGS,
   EMPLOYMENT_STATUSES,
@@ -15,6 +16,7 @@ import {
 } from '@acme/contracts';
 import { INSIGHTS_THROTTLE } from '../auth/auth.constants';
 import { Roles } from '../auth/auth.decorators';
+import { PaginationQueryDto, toPageRequest } from '../common/pagination';
 import { Trim } from '../common/validators';
 import { InsightsRepository } from './insights.repository';
 
@@ -68,7 +70,7 @@ export class InsightsController {
   }
 
   @Get('data-quality')
-  dataQuality(): Promise<DataQualityDto> {
-    return this.insights.dataQuality();
+  dataQuality(@Query() query: PaginationQueryDto): Promise<DataQualityDto> {
+    return this.insights.dataQuality(toPageRequest(query, OUTLIER_PAGE_SIZE));
   }
 }

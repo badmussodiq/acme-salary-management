@@ -6,12 +6,12 @@ import type {
   ListEmployeesQuery,
 } from '@acme/contracts';
 import { Avatar } from '@/components/avatar';
+import { Pagination } from '@/components/pagination';
 import { DataTable, type DataTableColumn } from '@acme/web-utils';
-import { Badge, buttonClass, Card, LinkButton, PageHeader, TABLE_CLASS } from '@/components/ui';
+import { Badge, Card, LinkButton, PageHeader, TABLE_CLASS } from '@/components/ui';
 import {
   directoryHref,
   nextSortDirection,
-  pageWindow,
   parseDirectoryQuery,
   toQueryString,
   type RawSearchParams,
@@ -101,7 +101,6 @@ const EmployeesPage = async ({
     serverData<EmployeeFacetsDto>('/employees/facets'),
   ]);
   const meta = list.meta ?? { page: 1, limit: 25, total: list.data.length };
-  const window = pageWindow(meta);
 
   return (
     <>
@@ -124,36 +123,11 @@ const EmployeesPage = async ({
           }
         />
       </Card>
-      <nav
-        className="mt-4 flex items-center justify-between text-sm text-slate-600"
-        aria-label="Pagination"
-      >
-        <span>
-          Showing {window.from.toLocaleString('en')}–{window.to.toLocaleString('en')} of{' '}
-          {meta.total.toLocaleString('en')}
-        </span>
-        <div className="flex items-center gap-2">
-          {meta.page > 1 ? (
-            <Link
-              className={buttonClass('secondary')}
-              href={directoryHref(query, { page: meta.page - 1 })}
-            >
-              Previous
-            </Link>
-          ) : null}
-          <span>
-            Page {meta.page} of {window.pages}
-          </span>
-          {meta.page < window.pages ? (
-            <Link
-              className={buttonClass('secondary')}
-              href={directoryHref(query, { page: meta.page + 1 })}
-            >
-              Next
-            </Link>
-          ) : null}
-        </div>
-      </nav>
+      <Pagination
+        meta={meta}
+        label="Employees"
+        hrefFor={(page) => directoryHref(query, { page })}
+      />
     </>
   );
 };

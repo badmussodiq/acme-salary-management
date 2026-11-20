@@ -14,7 +14,8 @@ describe('parseDashboardFilters', () => {
       department: undefined,
       jobTitle: undefined,
       status: 'active',
-      showAllRows: false,
+      summaryPage: 1,
+      outlierPage: 1,
     });
   });
 
@@ -53,11 +54,14 @@ describe('toDistributionQuery', () => {
   });
 });
 
-describe('showing every summary row', () => {
-  it('is off unless asked for', () => {
-    expect(parseDashboardFilters({}).showAllRows).toBe(false);
-    expect(parseDashboardFilters({ rows: 'all' }).showAllRows).toBe(true);
-    expect(parseDashboardFilters({ rows: 'everything' }).showAllRows).toBe(false);
+describe('paging the dashboard lists', () => {
+  it('reads page numbers and falls back to the first page', () => {
+    expect(parseDashboardFilters({ summaryPage: '3', outlierPage: '2' })).toMatchObject({
+      summaryPage: 3,
+      outlierPage: 2,
+    });
+    expect(parseDashboardFilters({ summaryPage: '0' }).summaryPage).toBe(1);
+    expect(parseDashboardFilters({ outlierPage: 'abc' }).outlierPage).toBe(1);
   });
 
   it('builds links that keep the filters', () => {
@@ -67,9 +71,9 @@ describe('showing every summary row', () => {
       status: 'all',
     });
 
-    expect(dashboardHref(filters, true)).toBe(
-      '/dashboard?groupBy=countryCode&status=all&countryCode=NG&department=Sales&rows=all',
+    expect(dashboardHref(filters, { summaryPage: 2 })).toBe(
+      '/dashboard?groupBy=countryCode&status=all&countryCode=NG&department=Sales&summaryPage=2',
     );
-    expect(dashboardHref(filters, false)).not.toContain('rows=');
+    expect(dashboardHref(filters)).not.toContain('Page=');
   });
 });

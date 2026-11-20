@@ -4,7 +4,6 @@ import {
   CURRENCY_CODES,
   EMPLOYEE_SORT_FIELDS,
   EMPLOYMENT_STATUSES,
-  PAGE_LIMIT_DEFAULT,
   SORT_DIRECTIONS,
   type ListEmployeesQuery,
 } from '@acme/contracts';
@@ -69,17 +68,3 @@ export const directoryHref = (
 
 export const nextSortDirection = (query: ListEmployeesQuery, field: string): 'asc' | 'desc' =>
   (query.sortBy ?? 'name') === field && (query.sortDir ?? 'asc') === 'asc' ? 'desc' : 'asc';
-
-export const pageWindow = (meta: {
-  readonly page: number;
-  readonly limit: number;
-  readonly total: number;
-}): { readonly from: number; readonly to: number; readonly pages: number } => {
-  const limit = meta.limit || PAGE_LIMIT_DEFAULT;
-  const pages = Math.max(1, Math.ceil(meta.total / limit));
-  return {
-    from: meta.total === 0 ? 0 : (meta.page - 1) * limit + 1,
-    to: Math.min(meta.page * limit, meta.total),
-    pages,
-  };
-};

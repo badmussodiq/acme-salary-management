@@ -24,9 +24,12 @@ export interface PageRequest {
   readonly offset: number;
 }
 
-export const toPageRequest = (query: PaginationQueryDto): PageRequest => {
+export const toPageRequest = (
+  query: PaginationQueryDto,
+  defaultLimit: number = PAGE_LIMIT_DEFAULT,
+): PageRequest => {
   const page = query.page ?? 1;
-  const limit = query.limit ?? PAGE_LIMIT_DEFAULT;
+  const limit = query.limit ?? defaultLimit;
   return { page, limit, offset: (page - 1) * limit };
 };
 
