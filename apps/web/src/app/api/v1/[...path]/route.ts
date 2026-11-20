@@ -1,6 +1,9 @@
 import { apiUrl } from '@/lib/api-config';
+import { readBodyWithLimit } from '@/lib/body-limit';
 
 export const dynamic = 'force-dynamic';
+
+const UPSTREAM_TIMEOUT_MS = 20_000;
 
 const STRIPPED_REQUEST_HEADERS: ReadonlySet<string> = new Set([
   'connection',
@@ -17,18 +20,13 @@ const STRIPPED_REQUEST_HEADERS: ReadonlySet<string> = new Set([
 
 const STRIPPED_RESPONSE_HEADERS = ['content-encoding', 'content-length', 'transfer-encoding'];
 
-const unavailable = (): Response =>
+const errorResponse = (status: number, code: string, message: string): Response =>
   Response.json(
     {
       success: false,
-      error: {
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'The API is unavailable',
-        requestId: 'proxy',
-        timestamp: new Date().toISOString(),
-      },
+      error: { code, message, requestId: 'proxy', timestamp: new Date().toISOString() },
     },
-    { status: 503 },
+    { status },
   );
 
 const forward = async (
@@ -44,19 +42,25 @@ const forward = async (
   });
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
+  const body = hasBody ? await readBodyWithLimit(request) : undefined;
+  if (body?.kind === 'too-large') {
+    return errorResponse(413, 'PAYLOAD_TOO_LARGE', 'The request body is too large');
+  }
+
   try {
     const upstream = await fetch(target, {
       method: request.method,
       headers,
-      body: hasBody ? await request.arrayBuffer() : null,
+      body: body?.bytes ?? null,
       redirect: 'manual',
       cache: 'no-store',
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
     const responseHeaders = new Headers(upstream.headers);
     STRIPPED_RESPONSE_HEADERS.forEach((name) => responseHeaders.delete(name));
     return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
   } catch {
-    return unavailable();
+    return errorResponse(503, 'SERVICE_UNAVAILABLE', 'The API is unavailable');
   }
 };
 

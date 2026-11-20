@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import './globals.css';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'ACME Salary Management',
   description: 'Salary management for the ACME HR team',
