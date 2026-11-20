@@ -27,6 +27,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: isCi ? 1 : 0,
+  expect: { timeout: 10_000 },
   reporter: isCi ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: { baseURL, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   projects: [

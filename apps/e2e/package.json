@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "echo \"browser tests run through test:e2e\"",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "demo": "playwright test -c playwright.demo.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

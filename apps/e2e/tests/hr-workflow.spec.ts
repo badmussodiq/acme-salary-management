@@ -14,11 +14,11 @@ const createEmployee = async (page: Page): Promise<void> => {
   await fill(page.getByLabel('Last name'), person.lastName);
   await fill(page.getByLabel('Work email'), person.email);
   await page.getByLabel('Country').selectOption('GH');
+  await expect(page.getByLabel('Currency')).toHaveValue('GHS');
   await fill(page.getByLabel('Department'), 'Finance');
   await fill(page.getByLabel('Job title'), 'Financial Analyst');
   await fill(page.getByLabel('Hire date'), '2024-02-01');
   await fill(page.getByLabel('Amount'), '90000');
-  await page.getByLabel('Currency').selectOption('GHS');
   await fill(page.getByLabel('Effective from'), '2024-02-01');
   await page.getByRole('button', { name: 'Create employee' }).click();
   await expect(page).toHaveURL(/\/employees\/[0-9a-f-]{36}$/);
@@ -144,5 +144,34 @@ test.describe.serial('HR manager salary workflow', () => {
     await open(page, '/employees/new');
 
     expect(violations).toEqual([]);
+  });
+
+  test('offers every country and fills in the currency from the one chosen', async ({ page }) => {
+    await open(page, '/employees/new');
+
+    const countries = page.getByLabel('Country');
+    expect(await countries.locator('option').count()).toBeGreaterThanOrEqual(190);
+
+    const expectations: readonly (readonly [string, string])[] = [
+      ['JP', 'JPY'],
+      ['CH', 'CHF'],
+      ['KI', 'AUD'],
+      ['BT', 'BTN'],
+      ['NG', 'NGN'],
+    ];
+    for (const [country, currency] of expectations) {
+      await countries.selectOption(country);
+      await expect(page.getByLabel('Currency')).toHaveValue(currency);
+    }
+  });
+
+  test('draws the headcount bars with real widths', async ({ page }) => {
+    await open(page, '/dashboard');
+
+    const bars = page.locator('ul li [aria-hidden="true"] > span');
+    expect(await bars.count()).toBeGreaterThan(5);
+    const box = await bars.first().boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThan(20);
+    expect(box?.height ?? 0).toBeGreaterThan(4);
   });
 });
