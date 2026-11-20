@@ -25,7 +25,7 @@ pnpm dev:api
 pnpm dev:web
 ```
 
-The API applies database migrations and creates the first HR manager on startup. Open http://localhost:3000 and sign in with the development credentials in `.env.example`. In production, set `INITIAL_HR_EMAIL` and `INITIAL_HR_PASSWORD`; no default account is created.
+The API applies database migrations, creates the first HR manager and, in development, seeds 10,000 synthetic employees on startup. Open http://localhost:3000 and sign in with the development credentials in `.env.example`. In production, set `INITIAL_HR_EMAIL` and `INITIAL_HR_PASSWORD`; no default account is created.
 
 Configuration defaults suit local development; see `.env.example` for every variable.
 
@@ -36,6 +36,17 @@ pnpm verify
 ```
 
 Runs the build, formatting, linting, type checks, unit tests, builds and the integration tests. Integration tests create a throwaway database per test file on the local Postgres (`pnpm db:up`), or the server named by `TEST_DATABASE_ADMIN_URL`.
+
+## Demo data
+
+The seed is deterministic (same data every run), idempotent (a second run does nothing) and flags every record as synthetic. It runs automatically in development and when `SEED_DEMO_DATA=true`. To run it by hand or rebuild it:
+
+```bash
+pnpm seed
+pnpm --filter @acme/api seed -- --reset
+```
+
+Measured query times at this size are in [docs/performance.md](docs/performance.md).
 
 ## Browser tests, images and deployment
 
