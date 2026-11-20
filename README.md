@@ -35,4 +35,13 @@ Configuration defaults suit local development; see `.env.example` for every vari
 pnpm verify
 ```
 
-Runs formatting, linting, type checks, unit tests, builds and the integration tests. Integration tests create a throwaway database per test file on the local Postgres (`pnpm db:up`), or the server named by `TEST_DATABASE_ADMIN_URL`.
+Runs the build, formatting, linting, type checks, unit tests, builds and the integration tests. Integration tests create a throwaway database per test file on the local Postgres (`pnpm db:up`), or the server named by `TEST_DATABASE_ADMIN_URL`.
+
+## Browser tests, images and deployment
+
+```bash
+pnpm build
+pnpm test:e2e
+```
+
+See [CI/CD and deployment](docs/ci-cd.md) for the pipeline, the slim Docker images and the automatic rollout.

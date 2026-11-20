@@ -1,0 +1,130 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cd
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+jobs:
+  publish:
+    name: Build, scan and push ${{ matrix.app }}
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        app: [api, web]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+      - name: Image name
+        run: |
+          owner="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          echo "IMAGE=ghcr.io/${owner}/acme-salary-${{ matrix.app }}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build for scanning
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          load: true
+          tags: scan:${{ matrix.app }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,scope=${{ matrix.app }},mode=max
+      - name: Scan for fixable high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: scan:${{ matrix.app }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+      - name: Push immutable image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: true
+          provenance: false
+          tags: ${{ env.IMAGE }}:sha-${{ env.SHA }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+
+  release-bundle:
+    name: Validate the deployment bundle
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+      - name: Lint the deploy script
+        run: shellcheck deploy/deploy.sh
+      - name: Validate the production compose file
+        run: |
+          cp deploy/.env.example deploy/.env
+          docker compose --env-file deploy/.env -f deploy/compose.prod.yaml config --quiet
+      - name: Describe the release
+        run: |
+          owner="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          mkdir -p bundle
+          cp deploy/compose.prod.yaml deploy/Caddyfile deploy/deploy.sh deploy/.env.example bundle/
+          printf '{"sha":"%s","api":"ghcr.io/%s/acme-salary-api:sha-%s","web":"ghcr.io/%s/acme-salary-web:sha-%s"}\n' \
+            "$SHA" "$owner" "$SHA" "$owner" "$SHA" > bundle/release.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: deploy-bundle
+          path: bundle
+          retention-days: 30
+
+  deploy:
+    name: Promote to production
+    needs: release-bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Move the latest tag to this release
+        run: |
+          owner="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          for app in api web; do
+            image="ghcr.io/${owner}/acme-salary-${app}"
+            docker buildx imagetools create --tag "${image}:latest" "${image}:sha-${SHA}"
+          done
+      - name: Summarise
+        run: |
+          {
+            echo "### Release ${SHA}"
+            echo "The \`latest\` tag now points at this release. The updater on the server pulls and restarts the containers on its next poll."
+            echo "To pin or roll back run \`deploy/deploy.sh sha-<commit>\` on the server."
+          } >> "$GITHUB_STEP_SUMMARY"
