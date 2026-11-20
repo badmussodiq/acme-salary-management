@@ -10,6 +10,7 @@
     "no-warning-comments": "error",
     "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
     "import/no-unassigned-import": ["error", { "allow": ["reflect-metadata"] }],
+    "typescript/no-unnecessary-type-parameters": "off",
     "eqeqeq": "error",
     "no-console": "warn"
   },
