@@ -55,4 +55,4 @@ pnpm build
 pnpm test:e2e
 ```
 
-See [CI/CD and deployment](docs/ci-cd.md) for the pipeline, the slim Docker images and the automatic rollout.
+See [CI/CD and deployment](docs/ci-cd.md) for the pipeline, the slim Docker images and the automatic rollout, and [the security review](docs/security.md) for the controls, the findings fixed and the accepted risks.

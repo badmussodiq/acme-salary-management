@@ -4,7 +4,7 @@
 
 **Assessment:** Incubyte — Software Craftsperson / Node / React / TypeScript II  
 **Document type:** Requirements, solution design and execution plan  
-**Status:** Phases 1–4 complete (core workflow, insights, seed, CI/CD); Phase 5 (security review and hardening) and Phase 6 (deployment and demo) remain
+**Status:** Phases 1–5 complete (core workflow, insights, seed, CI/CD, security review); Phase 6 (deployment and demo video) remains
 
 ---
 
