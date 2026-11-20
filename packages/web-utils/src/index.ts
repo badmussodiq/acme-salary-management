@@ -5,3 +5,4 @@ export * from './hooks/use-form-fields';
 export * from './hooks/use-api-action';
 export * from './ui/mapping';
 export * from './ui/data-table';
+export * from './ui/bar-list';

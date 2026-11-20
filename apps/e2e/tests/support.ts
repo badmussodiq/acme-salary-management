@@ -35,7 +35,7 @@ export const signIn = async (page: Page, { email, password }: Credentials): Prom
   await fill(page.getByLabel('Email'), email);
   await fill(page.getByLabel('Password'), password);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page).toHaveURL(/\/employees$/);
+  await expect(page).toHaveURL(/\/dashboard$/);
 };
 
 export const uniqueSuffix = (): string =>

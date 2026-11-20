@@ -13,7 +13,7 @@ export const LoginForm = () => {
     '/api/v1/auth/login',
     {
       onSuccess: () => {
-        router.replace('/employees');
+        router.replace('/dashboard');
         router.refresh();
       },
     },

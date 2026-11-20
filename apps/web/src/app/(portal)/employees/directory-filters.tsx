@@ -1,36 +1,8 @@
 import type { EmployeeFacetsDto, ListEmployeesQuery } from '@acme/contracts';
+import { FILTER_INPUT_CLASS, FilterSelect, plainOptions } from '@/components/filter-select';
 import { buttonClass } from '@/components/ui';
 import { countryName } from '@/lib/format';
 import { STATUS_OPTIONS } from '@/lib/options';
-
-const CONTROL =
-  'block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600';
-
-const Select = ({
-  name,
-  label,
-  value,
-  options,
-}: {
-  readonly name: string;
-  readonly label: string;
-  readonly value: string | undefined;
-  readonly options: readonly { readonly value: string; readonly label: string }[];
-}) => (
-  <label className="block text-xs font-medium text-slate-600">
-    {label}
-    <select name={name} defaultValue={value ?? ''} className={`${CONTROL} mt-1`}>
-      <option value="">All</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  </label>
-);
-
-const plain = (values: readonly string[]) => values.map((value) => ({ value, label: value }));
 
 export const DirectoryFilters = ({
   query,
@@ -52,38 +24,47 @@ export const DirectoryFilters = ({
         maxLength={100}
         defaultValue={query.search ?? ''}
         placeholder="e.g. Okafor or EMP-000123"
-        className={`${CONTROL} mt-1`}
+        className={FILTER_INPUT_CLASS}
       />
     </label>
-    <Select
+    <FilterSelect
       name="countryCode"
       label="Country"
       value={query.countryCode}
       options={facets.countries.map((code) => ({ value: code, label: countryName(code) }))}
     />
-    <Select
+    <FilterSelect
       name="department"
       label="Department"
       value={query.department}
-      options={plain(facets.departments)}
+      options={plainOptions(facets.departments)}
     />
-    <Select
+    <FilterSelect
       name="jobTitle"
       label="Job title"
       value={query.jobTitle}
-      options={plain(facets.jobTitles)}
+      options={plainOptions(facets.jobTitles)}
     />
-    <Select
+    <FilterSelect
       name="currencyCode"
       label="Currency"
       value={query.currencyCode}
-      options={plain(facets.currencies)}
+      options={plainOptions(facets.currencies)}
     />
-    <Select
+    <FilterSelect
       name="employmentStatus"
       label="Status"
       value={query.employmentStatus}
       options={STATUS_OPTIONS}
+    />
+    <FilterSelect
+      name="compensation"
+      label="Compensation"
+      value={query.compensation}
+      options={[
+        { value: 'missing', label: 'Missing current pay' },
+        { value: 'present', label: 'Has current pay' },
+      ]}
     />
     {query.sortBy ? <input type="hidden" name="sortBy" value={query.sortBy} /> : null}
     {query.sortDir ? <input type="hidden" name="sortDir" value={query.sortDir} /> : null}

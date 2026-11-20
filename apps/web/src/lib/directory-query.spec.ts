@@ -15,6 +15,7 @@ describe('parseDirectoryQuery', () => {
         countryCode: 'NG',
         employmentStatus: 'active',
         currencyCode: 'USD',
+        compensation: 'missing',
         sortBy: 'hiredOn',
         sortDir: 'desc',
         page: '3',
@@ -24,6 +25,7 @@ describe('parseDirectoryQuery', () => {
       countryCode: 'NG',
       employmentStatus: 'active',
       currencyCode: 'USD',
+      compensation: 'missing',
       sortBy: 'hiredOn',
       sortDir: 'desc',
       page: 3,
@@ -35,6 +37,7 @@ describe('parseDirectoryQuery', () => {
       parseDirectoryQuery({
         countryCode: 'ZZ',
         currencyCode: 'XXX',
+        compensation: 'maybe',
         sortBy: 'password_hash',
         sortDir: 'up',
         page: '-2',

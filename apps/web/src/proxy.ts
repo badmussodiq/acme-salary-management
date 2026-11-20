@@ -7,7 +7,7 @@ export const proxy = (request: NextRequest): NextResponse => {
   const isLogin = request.nextUrl.pathname === '/login';
 
   if (!hasSession && !isLogin) return NextResponse.redirect(new URL('/login', request.url));
-  if (hasSession && isLogin) return NextResponse.redirect(new URL('/employees', request.url));
+  if (hasSession && isLogin) return NextResponse.redirect(new URL('/dashboard', request.url));
   return NextResponse.next();
 };
 

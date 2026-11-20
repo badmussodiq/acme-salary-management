@@ -19,9 +19,9 @@ test.describe('authentication', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('signs in, shows the directory and signs out', async ({ page }) => {
+  test('signs in, shows the dashboard and signs out', async ({ page }) => {
     await signIn(page, credentials());
-    await expect(page.getByRole('heading', { name: 'Employees' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Sign out' }).click();
 

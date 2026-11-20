@@ -12,8 +12,11 @@ const PortalLayout = async ({ children }: { readonly children: ReactNode }) => {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-6">
-            <Link href="/employees" className="text-base font-semibold tracking-tight">
+            <Link href="/dashboard" className="text-base font-semibold tracking-tight">
               ACME Salary Management
+            </Link>
+            <Link href="/dashboard" className="text-sm text-slate-600 hover:text-slate-900">
+              Dashboard
             </Link>
             <Link href="/employees" className="text-sm text-slate-600 hover:text-slate-900">
               Employees

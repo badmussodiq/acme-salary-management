@@ -1,4 +1,4 @@
-import { COUNTRIES, type CountryCode, type CurrencyCode, type PayFrequency } from '@acme/contracts';
+import { COUNTRIES, type CurrencyCode, type PayFrequency } from '@acme/contracts';
 
 const FREQUENCY_SUFFIX: Readonly<Record<PayFrequency, string>> = {
   annual: '/ yr',
@@ -6,7 +6,7 @@ const FREQUENCY_SUFFIX: Readonly<Record<PayFrequency, string>> = {
   hourly: '/ hr',
 };
 
-export const countryName = (code: CountryCode): string =>
+export const countryName = (code: string): string =>
   COUNTRIES.find((country) => country.code === code)?.name ?? code;
 
 export const formatMoney = (amount: string, currency: CurrencyCode): string => {

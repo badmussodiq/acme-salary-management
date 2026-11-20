@@ -112,4 +112,22 @@ test.describe.serial('HR manager salary workflow', () => {
     await expect(rows.nth(1)).toContainText(`${person.firstName} ${person.lastName}`);
     await expect(rows.nth(1)).toContainText('GHS 105,000.50 / yr');
   });
+
+  test('shows the employee in the currency-safe dashboard summary', async ({ page }) => {
+    await open(page, '/dashboard?groupBy=countryCode&countryCode=GH&status=all');
+
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    const summary = page.getByRole('table').first();
+    await expect(summary.getByRole('row', { name: /Ghana.*GHS.*per year/ })).toBeVisible();
+    await expect(page.getByText(/never converted or combined across currencies/)).toBeVisible();
+  });
+
+  test('links the data-quality counts to the filtered directory', async ({ page }) => {
+    await open(page, '/dashboard');
+
+    await page.getByRole('link', { name: /Without current pay/ }).click();
+
+    await expect(page).toHaveURL(/compensation=missing/);
+    await expect(page.getByRole('heading', { name: 'Employees' })).toBeVisible();
+  });
 });

@@ -1,4 +1,5 @@
 import {
+  COMPENSATION_FILTERS,
   COUNTRY_CODES,
   CURRENCY_CODES,
   EMPLOYEE_SORT_FIELDS,
@@ -32,6 +33,7 @@ export const parseDirectoryQuery = (raw: RawSearchParams): ListEmployeesQuery =>
   const countryCode = oneOf(COUNTRY_CODES, first(raw['countryCode']));
   const employmentStatus = oneOf(EMPLOYMENT_STATUSES, first(raw['employmentStatus']));
   const currencyCode = oneOf(CURRENCY_CODES, first(raw['currencyCode']));
+  const compensation = oneOf(COMPENSATION_FILTERS, first(raw['compensation']));
   const sortBy = oneOf(EMPLOYEE_SORT_FIELDS, first(raw['sortBy']));
   const sortDir = oneOf(SORT_DIRECTIONS, first(raw['sortDir']));
 
@@ -43,6 +45,7 @@ export const parseDirectoryQuery = (raw: RawSearchParams): ListEmployeesQuery =>
     ...(countryCode ? { countryCode } : {}),
     ...(employmentStatus ? { employmentStatus } : {}),
     ...(currencyCode ? { currencyCode } : {}),
+    ...(compensation ? { compensation } : {}),
     ...(sortBy ? { sortBy } : {}),
     ...(sortDir ? { sortDir } : {}),
   };
