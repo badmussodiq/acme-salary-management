@@ -11,3 +11,4 @@ coverage
 .claude
 .api.log
 next-env.d.ts
+deploy/.release
