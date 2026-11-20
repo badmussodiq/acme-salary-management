@@ -8,6 +8,33 @@
 
 ---
 
+## Delivery status (read this first)
+
+This plan was written before the work started. It is kept as the record of intent. The table says what became of it.
+
+| Plan                                                                                                     | Outcome                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Employees, compensation history, audit trail                                                             | Built as planned                                                                                                             |
+| Insights, currency-safe summaries, data quality                                                          | Built as planned, plus outlier detection                                                                                     |
+| 10,000-employee deterministic seed                                                                       | Built; runs automatically in development or with `SEED_DEMO_DATA`                                                            |
+| Authentication, rate limits, standard 401/403, validation                                                | Built; sessions are a revocable HttpOnly cookie rather than a bearer token; limits follow the signed-in user                 |
+| Generic frontend blocks                                                                                  | Built: `useGenericState`, `useFieldState`, `useFormFields`, `httpRequest`, `useApiAction`, `Mapping`, `DataTable`, `BarList` |
+| CI, CD, slim images, automatic rollout                                                                   | Built; registry is GHCR; rollout is a pull-based updater plus `deploy.sh` with rollback                                      |
+| Backups with a documented restore                                                                        | Built and drilled                                                                                                            |
+| Security review                                                                                          | Done, see [security.md](security.md)                                                                                         |
+| Performance measurements                                                                                 | Done, see [performance.md](performance.md)                                                                                   |
+| Linting with ESLint                                                                                      | Changed to oxlint, because typescript-eslint does not support TypeScript 7                                                   |
+| Typed ORM                                                                                                | Changed to Kysely, a typed query builder (see [decisions.md](decisions.md))                                                  |
+| Component library                                                                                        | Tailwind with a few primitives instead of a library                                                                          |
+| `@Audited()` interceptor, `BaseRepository`, `Result` type, `PaginatedTable`, `FormDialog`, `useApiQuery` | Not built. Audit is written explicitly in the same transaction as each change, and pages paginate with links                 |
+| **S3 storage for profile pictures and documents (5C)**                                                   | **Designed only, not built.** The brief does not require file storage, so it was cut to protect quality elsewhere            |
+| **OpenAPI / Swagger documentation**                                                                      | **Not built.** The API contract is the typed `packages/contracts`                                                            |
+| Staging environment and post-deploy smoke tests                                                          | Not built. There is one environment; CI runs the browser suite against the production images before anything is published    |
+| Redis-backed rate limiting                                                                               | Not built. Limits are in memory, which is correct for one API instance                                                       |
+| **A deployed, publicly reachable instance**                                                              | **Not done.** No server was available; the procedure and its local proof are in [deployment.md](deployment.md)               |
+
+---
+
 ## 1. Product summary
 
 Build a secure, web-based salary management platform that enables ACME's HR team to manage compensation records for 10,000 employees across multiple countries and answer operational questions about how the organisation pays its people.
@@ -806,39 +833,39 @@ Each record should include context, decision, alternatives considered and conseq
 
 ### Product
 
-- [ ] Requirements document committed.
-- [ ] Scope and exclusions are explicit.
-- [ ] HR manager can complete the core workflow.
-- [ ] Dashboard answers meaningful salary questions.
-- [ ] 10,000 synthetic employees can be seeded.
+- [x] Requirements document committed ([requirements.md](requirements.md)).
+- [x] Scope and exclusions are explicit.
+- [x] HR manager can complete the core workflow.
+- [x] Dashboard answers meaningful salary questions.
+- [x] 10,000 synthetic employees can be seeded.
 
 ### Engineering
 
-- [ ] Backend and frontend are independently understandable.
-- [ ] Database migrations are committed.
-- [ ] Validation and error handling are consistent.
-- [ ] Salary history and audit trail work.
-- [ ] Currency-sensitive calculations are correct.
-- [ ] No unnecessary microservices or infrastructure.
+- [x] Backend and frontend are independently understandable.
+- [x] Database migrations are committed.
+- [x] Validation and error handling are consistent.
+- [x] Salary history and audit trail work.
+- [x] Currency-sensitive calculations are correct.
+- [x] No unnecessary microservices or infrastructure.
 
 ### Quality
 
-- [ ] Unit tests cover business rules.
-- [ ] Integration tests cover persistence and API behaviour.
-- [ ] End-to-end tests cover the main HR workflow.
-- [ ] Lint, type checks and production builds pass.
-- [ ] Security-sensitive paths have been reviewed.
+- [x] Unit tests cover business rules.
+- [x] Integration tests cover persistence and API behaviour.
+- [x] End-to-end tests cover the main HR workflow.
+- [x] Lint, type checks and production builds pass.
+- [x] Security-sensitive paths have been reviewed ([security.md](security.md)).
 
 ### Delivery
 
-- [ ] CI workflow runs on pull requests.
-- [ ] CD workflow deploys a versioned artifact.
-- [ ] Application is deployed and accessible.
-- [ ] Database persistence and backup approach are documented.
-- [ ] Demo video is available.
-- [ ] README contains setup, test, seed and deployment instructions.
-- [ ] Commit history shows incremental development.
-- [ ] AI workflow and important design decisions are documented.
+- [x] CI workflow is written for pull requests (linted with actionlint; not yet run on GitHub).
+- [x] CD workflow publishes a versioned, scanned artifact (not yet run on GitHub).
+- [ ] **Application is deployed and accessible. Not done: no server was available.**
+- [x] Database persistence and backup approach are documented and drilled ([deployment.md](deployment.md)).
+- [ ] **Demo video is available.** The recorder and script exist ([demo-script.md](demo-script.md)); the file still has to be uploaded and linked.
+- [x] README contains setup, test, seed and deployment instructions.
+- [x] Commit history shows incremental development.
+- [x] AI workflow and important design decisions are documented ([ai-workflow.md](ai-workflow.md), [decisions.md](decisions.md)).
 
 ---
 

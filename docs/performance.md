@@ -10,24 +10,24 @@ pnpm test:integration
 
 **Environment:** Windows 11 laptop, Postgres 18 in Docker (WSL2), Node 26, API and tests on the host. Numbers vary between runs; these are one run, not a benchmark claim.
 
-**Dataset:** 10,000 synthetic employees, 16 countries, 15 pay currencies, 3 pay frequencies, about 17,500 compensation periods and about 27,500 audit events.
+**Dataset:** 10,000 synthetic employees in all 247 countries and territories, paid in 153 currencies at 3 pay frequencies, about 17,500 compensation periods and about 27,500 audit events (from 3 employees in the smallest places to 472 in the largest country).
 
 | Operation                                      | Median (ms) | Max (ms) |
 | ---------------------------------------------- | ----------: | -------: |
-| Seed 10,000 employees from an empty database   |        5374 |     5374 |
-| Directory, first page                          |        26.1 |     29.9 |
-| Directory, search by employee number           |        32.1 |     36.7 |
-| Directory, search by name                      |        31.7 |     36.0 |
-| Directory, country + department + currency     |        13.3 |     14.4 |
-| Directory, page 200 sorted by hire date        |        25.6 |     27.1 |
-| Directory, employees missing current pay       |        19.1 |     21.3 |
-| Employee detail                                |         6.9 |      8.2 |
-| Employee compensation history                  |         7.3 |     10.4 |
-| Employee audit trail                           |        10.9 |     27.4 |
-| Dashboard overview                             |        19.8 |     34.5 |
-| Salary distribution by country (active)        |        22.8 |     25.7 |
-| Salary distribution by job title               |        33.6 |     35.6 |
-| Data quality (missing, inconsistent, outliers) |        36.1 |     38.2 |
+| Seed 10,000 employees from an empty database   |        7729 |     7729 |
+| Directory, first page                          |        26.8 |     31.8 |
+| Directory, search by employee number           |        40.2 |     48.6 |
+| Directory, search by name                      |        40.6 |     42.6 |
+| Directory, country + department + currency     |        10.2 |     10.8 |
+| Directory, page 200 sorted by hire date        |        28.8 |       32 |
+| Directory, employees missing current pay       |          18 |       19 |
+| Employee detail                                |         7.6 |      8.8 |
+| Employee compensation history                  |         7.2 |      8.4 |
+| Employee audit trail                           |         7.6 |     43.4 |
+| Dashboard overview                             |        43.2 |     62.9 |
+| Salary distribution by country (active)        |        25.4 |     35.4 |
+| Salary distribution by job title               |        52.5 |     54.2 |
+| Data quality (missing, inconsistent, outliers) |        43.7 |     86.6 |
 
 The seed figure includes `ANALYZE`. A cold container start (migrate, create the HR user, seed) took about 3 seconds in the production image.
 

@@ -50,7 +50,7 @@ deploy/deploy.sh sha-<commit>
 
 `deploy.sh` records the running images, pulls the requested tag (with retries), starts it with `--wait`, and if the new release does not become healthy it restores the previous images and exits non-zero. `SKIP_PULL=1` uses images already on the host.
 
-Server setup is one directory: copy `compose.prod.yaml`, `Caddyfile`, `deploy.sh` and a `.env` filled from `.env.example` (the bundle artifact contains them). Point the domain's DNS at the server; Caddy obtains the certificate. Private registries use `REGISTRY_USER` and `REGISTRY_TOKEN`.
+Server setup is one directory: copy `compose.prod.yaml`, `Caddyfile`, `deploy.sh`, `backup.sh`, `restore.sh` and a `.env` filled from `.env.example` (the bundle artifact contains them). Point the domain's DNS at the server; Caddy obtains the certificate. Private registries use `REGISTRY_USER` and `REGISTRY_TOKEN`. The full procedure, including scheduled backups and restore, is in [deployment.md](deployment.md).
 
 ## Verified locally
 

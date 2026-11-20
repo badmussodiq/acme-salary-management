@@ -1,58 +1,72 @@
 # ACME Salary Management Platform
 
-Salary management for an organisation of 10,000 employees. See [the engineering plan](docs/engineering-plan.md) for requirements, architecture, security and delivery.
+A web application for ACME's HR manager to manage salary data for 10,000 employees across every country in the world (247 countries and territories, 153 currencies) and answer questions about how the organisation pays its people. Built for the Incubyte software craftsperson assessment.
 
-## Stack
+- **Backend:** NestJS 12, PostgreSQL 18, Kysely (typed SQL), strict TypeScript 7
+- **Frontend:** Next.js 16 (server-rendered), React 19, Tailwind CSS 4
+- **Quality:** unit, integration and browser tests; type-aware linting with no `any` or type assertions; CI/CD with image scanning
+- **Operations:** slim Docker images, automatic rollout with rollback, scheduled backups with a drilled restore
 
-NestJS 12 API, Next.js 16 web app, PostgreSQL, Kysely, TypeScript 7, pnpm workspaces.
+## Run it
 
-## Layout
-
-| Path                 | Purpose                                             |
-| -------------------- | --------------------------------------------------- |
-| `apps/api`           | NestJS REST API                                     |
-| `apps/web`           | Next.js web application                             |
-| `packages/contracts` | Shared response envelope, error codes and API types |
-| `packages/web-utils` | Generic hooks and components shared by the web app  |
-| `docs`               | Requirements, architecture and decisions            |
-
-## Run locally
+Requirements: Node 24 or newer, pnpm 12, Docker (for PostgreSQL).
 
 ```bash
 pnpm install
 pnpm db:up
-pnpm dev:api
-pnpm dev:web
+pnpm dev:api        # http://localhost:3001, migrates, creates the HR user and seeds 10,000 employees
+pnpm dev:web        # http://localhost:3000
 ```
 
-The API applies database migrations, creates the first HR manager and, in development, seeds 10,000 synthetic employees on startup. Open http://localhost:3000 and sign in with the development credentials in `.env.example`. In production, set `INITIAL_HR_EMAIL` and `INITIAL_HR_PASSWORD`; no default account is created.
+Open http://localhost:3000 and sign in with the development credentials in [.env.example](.env.example). Nothing else needs to be run: migrations, the first account and the demo data all happen on start.
 
-Configuration defaults suit local development; see `.env.example` for every variable.
+## Commands
 
-## Quality checks
+| Command                       | What it does                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------- |
+| `pnpm verify`                 | Build, format check, lint, type check, unit tests, integration tests (needs `pnpm db:up`) |
+| `pnpm test`                   | Unit tests of every package                                                               |
+| `pnpm test:integration`       | API tests against real PostgreSQL, including the 10,000-employee performance run          |
+| `pnpm build && pnpm test:e2e` | Browser tests (Playwright) against local servers                                          |
+| `pnpm seed`                   | Seed 10,000 synthetic employees by hand (idempotent; `--reset` rebuilds)                  |
+| `pnpm demo:video`             | Record the captioned demo walkthrough ([docs/demo-script.md](docs/demo-script.md))        |
 
-```bash
-pnpm verify
-```
+## What it does
 
-Runs the build, formatting, linting, type checks, unit tests, builds and the integration tests. Integration tests create a throwaway database per test file on the local Postgres (`pnpm db:up`), or the server named by `TEST_DATABASE_ADMIN_URL`.
+- **Employees and pay:** search, filter, sort and paginate the directory on the server; create and edit employees; add compensation as a dated history; strict validation everywhere.
+- **Insights:** headcount by country and department; pay mix; minimum, median, average and maximum **per currency and pay frequency, never mixed**; employees with no pay; unusual salaries.
+- **Audit:** every change records who, when, before and after; the log is append-only in the database.
+- **Security:** revocable sessions, per-user rate limits, a standard error envelope for 401, 403 and 429, nonce-based CSP, strict input validation, hardened containers.
 
-## Demo data
+## Where to look
 
-The seed is deterministic (same data every run), idempotent (a second run does nothing) and flags every record as synthetic. It runs automatically in development and when `SEED_DEMO_DATA=true`. To run it by hand or rebuild it:
+| Question                              | Answer                                               |
+| ------------------------------------- | ---------------------------------------------------- |
+| What was built, and what was left out | [docs/requirements.md](docs/requirements.md)         |
+| How it fits together                  | [docs/architecture.md](docs/architecture.md)         |
+| Why these choices                     | [docs/decisions.md](docs/decisions.md)               |
+| The original plan and what changed    | [docs/engineering-plan.md](docs/engineering-plan.md) |
+| How AI was used and checked           | [docs/ai-workflow.md](docs/ai-workflow.md)           |
+| How it is secured                     | [docs/security.md](docs/security.md)                 |
+| How fast it is, measured              | [docs/performance.md](docs/performance.md)           |
+| CI, CD and the Docker images          | [docs/ci-cd.md](docs/ci-cd.md)                       |
+| Running it on a server, backups       | [docs/deployment.md](docs/deployment.md)             |
+| The demo video                        | [docs/demo-script.md](docs/demo-script.md)           |
 
-```bash
-pnpm seed
-pnpm --filter @acme/api seed -- --reset
-```
+## Repository
 
-Measured query times at this size are in [docs/performance.md](docs/performance.md).
+| Path                 | Purpose                                               |
+| -------------------- | ----------------------------------------------------- |
+| `apps/api`           | NestJS REST API, migrations, seed                     |
+| `apps/web`           | Next.js application and the runtime API proxy         |
+| `apps/e2e`           | Playwright browser tests and the demo recorder        |
+| `packages/contracts` | Shared response envelope, error codes and DTO types   |
+| `packages/web-utils` | Generic hooks and components shared by the web app    |
+| `deploy`             | Production compose, proxy, deploy, backup and restore |
+| `.github/workflows`  | CI and CD                                             |
 
-## Browser tests, images and deployment
+## Honest status
 
-```bash
-pnpm build
-pnpm test:e2e
-```
+Done and verified: everything above, including the Docker images passing the browser suite and a backup restore that returned exactly the 10,000 employees, their pay history and audit trail.
 
-See [CI/CD and deployment](docs/ci-cd.md) for the pipeline, the slim Docker images and the automatic rollout, and [the security review](docs/security.md) for the controls, the findings fixed and the accepted risks.
+Not done: a **publicly deployed instance** (no server was available; [docs/deployment.md](docs/deployment.md) is the procedure), **S3 file storage** and **OpenAPI documentation** (designed in the plan, cut from scope), and the GitHub-hosted workflow runs themselves, which were linted and exercised step by step locally but not run on GitHub. [docs/engineering-plan.md](docs/engineering-plan.md) lists every difference between the plan and the result.
