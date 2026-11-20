@@ -1,5 +1,16 @@
 name: acme-e2e
 
+x-hardened: &hardened
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 256
+
 services:
   postgres:
     image: postgres:18-alpine
@@ -16,6 +27,7 @@ services:
       retries: 20
 
   api:
+    <<: *hardened
     image: ${API_IMAGE:-acme-salary-api:local}
     environment:
       NODE_ENV: production
@@ -32,6 +44,7 @@ services:
         condition: service_healthy
 
   web:
+    <<: *hardened
     image: ${WEB_IMAGE:-acme-salary-web:local}
     environment:
       API_ORIGIN: http://api:3001

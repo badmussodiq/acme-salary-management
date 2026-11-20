@@ -1,5 +1,16 @@
 name: acme-salary
 
+x-hardened: &hardened
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 256
+
 services:
   postgres:
     image: postgres:18-alpine
@@ -17,6 +28,7 @@ services:
       retries: 20
 
   api:
+    <<: *hardened
     image: ${API_IMAGE:-${IMAGE_REGISTRY:?IMAGE_REGISTRY must be set}/acme-salary-api:${IMAGE_TAG:-latest}}
     restart: unless-stopped
     environment:
@@ -35,6 +47,7 @@ services:
       com.centurylinklabs.watchtower.enable: 'true'
 
   web:
+    <<: *hardened
     image: ${WEB_IMAGE:-${IMAGE_REGISTRY:?IMAGE_REGISTRY must be set}/acme-salary-web:${IMAGE_TAG:-latest}}
     restart: unless-stopped
     environment:
