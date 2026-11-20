@@ -1,5 +1,18 @@
 import { plainToInstance, Type } from 'class-transformer';
-import { IsIn, IsInt, IsUrl, Matches, Max, Min, validateSync } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+  validateSync,
+} from 'class-validator';
 
 const NODE_ENVIRONMENTS = ['development', 'test', 'production'] as const;
 type NodeEnvironment = (typeof NODE_ENVIRONMENTS)[number];
@@ -17,6 +30,15 @@ export interface AppConfig {
   readonly throttleLimit: number;
   readonly dbPoolMax: number;
   readonly dbStatementTimeoutMs: number;
+  readonly jwtSecret: string;
+  readonly sessionTtlHours: number;
+  readonly cookieSecure: boolean;
+  readonly initialHr: InitialHr | undefined;
+}
+
+export interface InitialHr {
+  readonly email: string;
+  readonly password: string;
 }
 
 class RawEnvironment {
@@ -31,9 +53,23 @@ class RawEnvironment {
   @Type(() => Number) @IsInt() @Min(1) THROTTLE_LIMIT = 100;
   @Type(() => Number) @IsInt() @Min(1) @Max(100) DB_POOL_MAX = 10;
   @Type(() => Number) @IsInt() @Min(100) DB_STATEMENT_TIMEOUT_MS = 10_000;
+  @IsString() @MinLength(32) @MaxLength(256) JWT_SECRET =
+    'development-only-secret-replace-me-before-deploying';
+  @Type(() => Number) @IsInt() @Min(1) @Max(168) SESSION_TTL_HOURS = 8;
+  @IsOptional() @IsEmail() INITIAL_HR_EMAIL?: string;
+  @IsOptional() @IsString() @MinLength(12) @MaxLength(128) INITIAL_HR_PASSWORD?: string;
 }
 
-const PRODUCTION_REQUIRED = ['DATABASE_URL', 'WEB_ORIGIN'] as const;
+const DEVELOPMENT_HR: InitialHr = { email: 'hr@acme.test', password: 'Dev-Only-Passw0rd!' };
+
+const PRODUCTION_REQUIRED = ['DATABASE_URL', 'WEB_ORIGIN', 'JWT_SECRET'] as const;
+
+const resolveInitialHr = (raw: RawEnvironment): InitialHr | undefined => {
+  if (raw.INITIAL_HR_EMAIL && raw.INITIAL_HR_PASSWORD) {
+    return { email: raw.INITIAL_HR_EMAIL.toLowerCase(), password: raw.INITIAL_HR_PASSWORD };
+  }
+  return raw.NODE_ENV === 'production' ? undefined : DEVELOPMENT_HR;
+};
 
 export const loadAppConfig = (env: NodeJS.ProcessEnv): AppConfig => {
   if (env['NODE_ENV'] === 'production') {
@@ -64,5 +100,9 @@ export const loadAppConfig = (env: NodeJS.ProcessEnv): AppConfig => {
     throttleLimit: raw.THROTTLE_LIMIT,
     dbPoolMax: raw.DB_POOL_MAX,
     dbStatementTimeoutMs: raw.DB_STATEMENT_TIMEOUT_MS,
+    jwtSecret: raw.JWT_SECRET,
+    sessionTtlHours: raw.SESSION_TTL_HOURS,
+    cookieSecure: raw.NODE_ENV === 'production',
+    initialHr: resolveInitialHr(raw),
   };
 };

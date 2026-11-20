@@ -1,19 +1,15 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  type OnApplicationShutdown,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, type OnApplicationShutdown } from '@nestjs/common';
 import { Kysely, PostgresDialect, sql } from 'kysely';
 import { Migrator } from 'kysely/migration';
-import { Pool } from 'pg';
+import { Pool, types } from 'pg';
 import { APP_CONFIG, type AppConfig } from '../config/app-config';
 import type { Database } from './database.types';
 import { inCodeMigrationProvider } from './migrations';
 
+types.setTypeParser(types.builtins.DATE, (value: string) => value);
+
 @Injectable()
-export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
+export class DatabaseService implements OnApplicationShutdown {
   private readonly logger = new Logger(DatabaseService.name);
   readonly db: Kysely<Database>;
 
@@ -30,7 +26,7 @@ export class DatabaseService implements OnModuleInit, OnApplicationShutdown {
     });
   }
 
-  async onModuleInit(): Promise<void> {
+  async migrate(): Promise<void> {
     const migrator = new Migrator({ db: this.db, provider: inCodeMigrationProvider });
     const { error, results } = await migrator.migrateToLatest();
     results?.forEach((result) => {

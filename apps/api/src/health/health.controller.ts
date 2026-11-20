@@ -1,9 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import type { LiveResponse, ReadyResponse } from '@acme/contracts';
+import { Public } from '../auth/auth.decorators';
 import { AppException } from '../common/app.exception';
 import { DatabaseService } from '../database/database.service';
 
+@Public()
 @SkipThrottle()
 @Controller('health')
 export class HealthController {

@@ -24,13 +24,39 @@ describe('loadAppConfig', () => {
     { DATABASE_URL: 'mysql://x' },
     { WEB_ORIGIN: 'localhost:3000' },
     { BODY_LIMIT: '100 gigabytes' },
+    { JWT_SECRET: 'short' },
+    { INITIAL_HR_EMAIL: 'not-an-email' },
   ])('rejects invalid values %o', (env) => {
     expect(() => loadAppConfig(env)).toThrow('Invalid environment configuration');
   });
 
+  it('seeds a development HR user only outside production', () => {
+    expect(loadAppConfig({}).initialHr?.email).toBe('hr@acme.test');
+    expect(
+      loadAppConfig({
+        NODE_ENV: 'production',
+        DATABASE_URL: 'postgres://u:p@db:5432/x',
+        WEB_ORIGIN: 'https://hr.example.com',
+        JWT_SECRET: 'x'.repeat(40),
+      }).initialHr,
+    ).toBeUndefined();
+  });
+
+  it('normalises the configured HR email', () => {
+    const config = loadAppConfig({
+      INITIAL_HR_EMAIL: 'Boss@Example.com',
+      INITIAL_HR_PASSWORD: 'a-long-enough-password',
+    });
+
+    expect(config.initialHr).toEqual({
+      email: 'boss@example.com',
+      password: 'a-long-enough-password',
+    });
+  });
+
   it('requires explicit connection settings in production', () => {
     expect(() => loadAppConfig({ NODE_ENV: 'production' })).toThrow(
-      'Missing required environment variables: DATABASE_URL, WEB_ORIGIN',
+      'Missing required environment variables: DATABASE_URL, WEB_ORIGIN, JWT_SECRET',
     );
   });
 });

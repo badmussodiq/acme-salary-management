@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module';
+import { InitialHrService } from '../src/auth/initial-hr.service';
 import { APP_CONFIG, loadAppConfig, type AppConfig } from '../src/config/app-config';
 import { configureApp } from '../src/configure-app';
 import { ProbeController } from './probe.controller';
@@ -21,6 +22,8 @@ export const createTestApp = async (
   })
     .overrideProvider(APP_CONFIG)
     .useValue(config)
+    .overrideProvider(InitialHrService)
+    .useValue({})
     .overrideProvider(DatabaseService)
     .useValue({ isReachable: () => Promise.resolve(database.reachable) })
     .compile();
