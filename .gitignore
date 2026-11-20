@@ -12,3 +12,4 @@ coverage
 .api.log
 next-env.d.ts
 deploy/.release
+*.tsbuildinfo
