@@ -13,12 +13,14 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
+  COMPENSATION_FILTERS,
   COUNTRY_CODES,
   CURRENCY_CODES,
   EMPLOYEE_SORT_FIELDS,
   EMPLOYMENT_STATUSES,
   PAY_FREQUENCIES,
   SORT_DIRECTIONS,
+  type CompensationFilter,
   type CompensationInput,
   type CountryCode,
   type CreateEmployeeRequest,
@@ -189,6 +191,10 @@ export class ListEmployeesQueryDto extends PaginationQueryDto implements ListEmp
   @IsOptional()
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;
+
+  @IsOptional()
+  @IsIn(COMPENSATION_FILTERS)
+  compensation?: CompensationFilter;
 
   @IsOptional()
   @IsIn(EMPLOYEE_SORT_FIELDS)

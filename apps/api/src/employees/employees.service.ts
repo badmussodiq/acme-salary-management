@@ -60,6 +60,7 @@ export class EmployeesService {
         jobTitle: query.jobTitle,
         employmentStatus: query.employmentStatus,
         currencyCode: query.currencyCode,
+        compensation: query.compensation,
       },
       { by: query.sortBy ?? 'name', direction: query.sortDir ?? 'asc' },
       request.limit,

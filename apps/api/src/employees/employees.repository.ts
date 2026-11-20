@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { sql, type Expression, type Kysely, type SqlBool } from 'kysely';
 import type {
+  CompensationFilter,
   CountryCode,
   CurrencyCode,
   EmployeeFacetsDto,
@@ -11,6 +12,7 @@ import type {
 import { containsPattern, prefixPattern } from '../common/sql-like';
 import { DatabaseService } from '../database/database.service';
 import type { Database } from '../database/database.types';
+import { withCurrentCompensation } from './current-compensation';
 import type { EmployeeWithCompensationRow } from './employee.mapper';
 
 export interface EmployeeFilters {
@@ -20,6 +22,7 @@ export interface EmployeeFilters {
   readonly jobTitle?: string | undefined;
   readonly employmentStatus?: EmploymentStatus | undefined;
   readonly currencyCode?: CurrencyCode | undefined;
+  readonly compensation?: CompensationFilter | undefined;
 }
 
 export interface EmployeeSort {
@@ -54,22 +57,8 @@ type Executor = Kysely<Database>;
 export class EmployeesRepository {
   constructor(private readonly database: DatabaseService) {}
 
-  private withCurrentCompensation(executor: Executor) {
-    return executor.selectFrom('employees as e').leftJoin('compensations as c', (join) =>
-      join
-        .onRef('c.employee_id', '=', 'e.id')
-        .on('c.effective_from', '<=', sql<string>`CURRENT_DATE`)
-        .on((eb) =>
-          eb.or([
-            eb('c.effective_to', 'is', null),
-            eb('c.effective_to', '>', sql<string>`CURRENT_DATE`),
-          ]),
-        ),
-    );
-  }
-
   private filtered(executor: Executor, filters: EmployeeFilters) {
-    const base = this.withCurrentCompensation(executor);
+    const base = withCurrentCompensation(executor);
     return base.where((eb) => {
       const conditions: Expression<SqlBool>[] = [];
       if (filters.search) {
@@ -91,6 +80,8 @@ export class EmployeesRepository {
         conditions.push(eb('e.employment_status', '=', filters.employmentStatus));
       }
       if (filters.currencyCode) conditions.push(eb('c.currency_code', '=', filters.currencyCode));
+      if (filters.compensation === 'missing') conditions.push(eb('c.id', 'is', null));
+      if (filters.compensation === 'present') conditions.push(eb('c.id', 'is not', null));
       return eb.and(conditions);
     });
   }
@@ -148,7 +139,7 @@ export class EmployeesRepository {
     id: string,
     executor: Executor = this.database.db,
   ): Promise<EmployeeWithCompensationRow | undefined> {
-    return this.withCurrentCompensation(executor)
+    return withCurrentCompensation(executor)
       .selectAll('e')
       .select([
         'c.amount as comp_amount',

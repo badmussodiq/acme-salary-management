@@ -11,6 +11,8 @@ import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { EmployeesModule } from './employees/employees.module';
 import { HealthModule } from './health/health.module';
+import { InsightsModule } from './insights/insights.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { HealthModule } from './health/health.module';
     AuthModule,
     AuditModule,
     EmployeesModule,
+    InsightsModule,
+    SeedModule,
     HealthModule,
   ],
   providers: [

@@ -1,4 +1,10 @@
-import type { CreateEmployeeRequest, CountryCode, CurrencyCode } from '@acme/contracts';
+import type {
+  CountryCode,
+  CreateEmployeeRequest,
+  CurrencyCode,
+  EmploymentStatus,
+  PayFrequency,
+} from '@acme/contracts';
 import type { DatabaseService } from '../../src/database/database.service';
 
 let counter = 0;
@@ -67,4 +73,59 @@ export const insertEmployees = async (
       })
       .execute();
   }
+};
+
+export interface PeriodSpec {
+  readonly amount: string;
+  readonly currencyCode: CurrencyCode;
+  readonly payFrequency: PayFrequency;
+  readonly from: string;
+  readonly to?: string;
+}
+
+export interface EmployeeSpec {
+  readonly lastName: string;
+  readonly countryCode: CountryCode;
+  readonly department: string;
+  readonly jobTitle: string;
+  readonly status?: EmploymentStatus;
+  readonly periods?: readonly PeriodSpec[];
+}
+
+let specCounter = 0;
+
+export const insertEmployeeWithPay = async (
+  database: DatabaseService,
+  spec: EmployeeSpec,
+): Promise<string> => {
+  specCounter += 1;
+  const employee = await database.db
+    .insertInto('employees')
+    .values({
+      first_name: 'Test',
+      last_name: spec.lastName,
+      email: `spec.${specCounter}.${spec.lastName.toLowerCase()}@example.com`,
+      country_code: spec.countryCode,
+      department: spec.department,
+      job_title: spec.jobTitle,
+      hired_on: '2020-01-01',
+      employment_status: spec.status ?? 'active',
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+
+  for (const period of spec.periods ?? []) {
+    await database.db
+      .insertInto('compensations')
+      .values({
+        employee_id: employee.id,
+        amount: period.amount,
+        currency_code: period.currencyCode,
+        pay_frequency: period.payFrequency,
+        effective_from: period.from,
+        effective_to: period.to ?? null,
+      })
+      .execute();
+  }
+  return employee.id;
 };

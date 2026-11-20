@@ -76,6 +76,9 @@ export type EmployeeSortField = (typeof EMPLOYEE_SORT_FIELDS)[number];
 export const SORT_DIRECTIONS = ['asc', 'desc'] as const;
 export type SortDirection = (typeof SORT_DIRECTIONS)[number];
 
+export const COMPENSATION_FILTERS = ['missing', 'present'] as const;
+export type CompensationFilter = (typeof COMPENSATION_FILTERS)[number];
+
 export interface ListEmployeesQuery {
   readonly page?: number;
   readonly limit?: number;
@@ -85,6 +88,7 @@ export interface ListEmployeesQuery {
   readonly jobTitle?: string;
   readonly employmentStatus?: EmploymentStatus;
   readonly currencyCode?: CurrencyCode;
+  readonly compensation?: CompensationFilter;
   readonly sortBy?: EmployeeSortField;
   readonly sortDir?: SortDirection;
 }
