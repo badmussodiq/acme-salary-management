@@ -1,12 +1,13 @@
 import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
-import type { SessionUser } from '@acme/contracts';
+import type { AcceptedResponse, SessionUser } from '@acme/contracts';
 import { APP_CONFIG, type AppConfig } from '../config/app-config';
 import { LOGIN_THROTTLE, SESSION_COOKIE } from './auth.constants';
 import { CurrentUser, Public } from './auth.decorators';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { readCookie } from './session-cookie';
 import { TokenService } from './token.service';
 
@@ -35,6 +36,43 @@ export class AuthController {
       maxAge: this.tokens.maxAgeMs,
     });
     return user;
+  }
+
+  @Public()
+  @Throttle(LOGIN_THROTTLE)
+  @Post('forgot-password')
+  @HttpCode(202)
+  async forgotPassword(@Body() body: ForgotPasswordDto): Promise<AcceptedResponse> {
+    await this.auth.requestPasswordReset(body.email);
+    return { accepted: true };
+  }
+
+  @Public()
+  @Throttle(LOGIN_THROTTLE)
+  @Post('reset-password')
+  @HttpCode(200)
+  async resetPassword(@Body() body: ResetPasswordDto): Promise<AcceptedResponse> {
+    await this.auth.resetPassword(body.token, body.password);
+    return { accepted: true };
+  }
+
+  @Throttle(LOGIN_THROTTLE)
+  @Post('change-password')
+  @HttpCode(200)
+  async changePassword(
+    @CurrentUser() user: SessionUser,
+    @Body() body: ChangePasswordDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<AcceptedResponse> {
+    const token = await this.auth.changePassword(user.id, body.currentPassword, body.newPassword);
+    response.cookie(SESSION_COOKIE, token, {
+      httpOnly: true,
+      secure: this.config.cookieSecure,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: this.tokens.maxAgeMs,
+    });
+    return { accepted: true };
   }
 
   @Public()

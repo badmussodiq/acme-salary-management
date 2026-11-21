@@ -124,3 +124,112 @@ describe('session handling', () => {
     expect(response.body.error.code).toBe('FORBIDDEN');
   });
 });
+
+const requestReset = (address: string) =>
+  context.anonymous().post('/api/v1/auth/forgot-password').send({ email: address });
+
+const tokenFromMailbox = (): string => {
+  const text = context.mailbox.at(-1)?.text ?? '';
+  const link = /https?:\/\/\S+/.exec(text)?.[0] ?? '';
+  return new URL(link).searchParams.get('token') ?? '';
+};
+
+describe('password reset', () => {
+  const email = 'forgetful@example.com';
+  const oldPassword = 'Old-Passw0rd-Here!';
+  const newPassword = 'Brand-New-Passw0rd!';
+
+  beforeAll(async () => {
+    await createUser(context, email, oldPassword);
+  });
+
+  it('answers the same for known and unknown emails, mailing only the known one', async () => {
+    const before = context.mailbox.length;
+    const unknown = await requestReset('nobody@example.com');
+    const known = await requestReset(email);
+
+    expect(unknown.status).toBe(202);
+    expect(known.status).toBe(202);
+    expect(known.body).toEqual(unknown.body);
+    expect(context.mailbox).toHaveLength(before + 1);
+    expect(context.mailbox.at(-1)?.to).toBe(email);
+  });
+
+  it('sets the new password once, revokes old sessions and burns the link', async () => {
+    const session = await context.loginAgent(email, oldPassword);
+    await requestReset(email);
+    const token = tokenFromMailbox();
+
+    const reset = await context
+      .anonymous()
+      .post('/api/v1/auth/reset-password')
+      .send({ token, password: newPassword });
+    expect(reset.status).toBe(200);
+
+    expect((await session.get('/api/v1/auth/me')).status).toBe(401);
+    expect((await login(email, oldPassword)).status).toBe(401);
+    expect((await login(email, newPassword)).status).toBe(200);
+
+    const reuse = await context
+      .anonymous()
+      .post('/api/v1/auth/reset-password')
+      .send({ token, password: 'Another-Passw0rd-Again!' });
+    expect(reuse.status).toBe(400);
+  });
+
+  it('rejects garbage tokens and weak passwords', async () => {
+    const garbage = await context
+      .anonymous()
+      .post('/api/v1/auth/reset-password')
+      .send({ token: 'x'.repeat(40), password: newPassword });
+    const weak = await context
+      .anonymous()
+      .post('/api/v1/auth/reset-password')
+      .send({ token: 'x'.repeat(40), password: 'short' });
+
+    expect(garbage.status).toBe(400);
+    expect(weak.status).toBe(400);
+  });
+});
+
+describe('POST /auth/change-password', () => {
+  const email = 'changer@example.com';
+  const current = 'Current-Passw0rd-1!';
+  const next = 'Changed-Passw0rd-2!';
+
+  beforeAll(async () => {
+    await createUser(context, email, current);
+  });
+
+  it('requires a session', async () => {
+    const response = await context
+      .anonymous()
+      .post('/api/v1/auth/change-password')
+      .send({ currentPassword: current, newPassword: next });
+    expect(response.status).toBe(401);
+  });
+
+  it('rejects a wrong current password', async () => {
+    const agent = await context.loginAgent(email, current);
+    const response = await agent
+      .post('/api/v1/auth/change-password')
+      .send({ currentPassword: 'wrong-password-here', newPassword: next });
+    expect(response.status).toBe(400);
+    expect(response.body.error.details[0].field).toBe('currentPassword');
+  });
+
+  it('changes it, keeps this session and signs the others out', async () => {
+    const here = await context.loginAgent(email, current);
+    const elsewhere = await context.loginAgent(email, current);
+
+    const response = await here
+      .post('/api/v1/auth/change-password')
+      .send({ currentPassword: current, newPassword: next });
+
+    expect(response.status).toBe(200);
+    expect((await here.get('/api/v1/auth/me')).status).toBe(200);
+    expect((await elsewhere.get('/api/v1/auth/me')).status).toBe(401);
+    expect((await login(email, current)).status).toBe(401);
+    expect((await login(email, next)).status).toBe(200);
+  });
+});

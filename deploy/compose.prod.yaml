@@ -69,6 +69,11 @@ services:
       INITIAL_HR_PASSWORD: ${INITIAL_HR_PASSWORD:?INITIAL_HR_PASSWORD must be set}
       TRUST_PROXY_HOPS: '1'
       SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-ACME Salary <no-reply@acme.test>}
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { LoginRequest, SessionUser } from '@acme/contracts';
 import { useApiAction, useFormFields } from '@acme/web-utils';
@@ -45,6 +46,12 @@ export const LoginForm = () => {
         <Button type="submit" disabled={pending} className="w-full">
           {pending ? 'Signing in…' : 'Sign in'}
         </Button>
+        <Link
+          href="/forgot-password"
+          className="block text-center text-sm text-brand-600 hover:underline"
+        >
+          Forgot your password?
+        </Link>
       </form>
     </Card>
   );

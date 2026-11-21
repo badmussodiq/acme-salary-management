@@ -11,3 +11,5 @@ Create a `.env` file in this folder before running `deploy.sh`. It must define e
 `compose.prod.yaml` references (for example `DOMAIN`, `WEB_ORIGIN`, `POSTGRES_PASSWORD`,
 `JWT_SECRET`, `INITIAL_HR_EMAIL` and `INITIAL_HR_PASSWORD`). Generate each secret yourself and
 never commit the file.
+
+Password reset emails need an SMTP server. Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and `MAIL_FROM` in `.env` (all optional; without `SMTP_HOST` no email is sent). Mailpit is only part of the local Docker setup.

@@ -5,9 +5,12 @@ const SESSION_COOKIE = 'acme_session';
 
 export const proxy = (request: NextRequest): NextResponse => {
   const hasSession = request.cookies.has(SESSION_COOKIE);
-  const isLogin = request.nextUrl.pathname === '/login';
+  const { pathname } = request.nextUrl;
+  const isLogin = pathname === '/login';
+  const isRecovery = pathname === '/forgot-password' || pathname === '/reset-password';
 
-  if (!hasSession && !isLogin) return NextResponse.redirect(new URL('/login', request.url));
+  if (!hasSession && !isLogin && !isRecovery)
+    return NextResponse.redirect(new URL('/login', request.url));
   if (hasSession && isLogin) return NextResponse.redirect(new URL('/dashboard', request.url));
 
   const policy = buildContentSecurityPolicy({

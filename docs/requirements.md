@@ -38,7 +38,7 @@ One persona: the **HR manager**, who maintains compensation records, reviews pay
 | Recruitment, attendance, leave        | Outside salary administration                                                             |
 | Microservices, queues, Kubernetes     | A 10,000-row dataset does not justify them; a modular monolith is simpler to run and test |
 | Custom report builder, BI             | A few reliable insights beat a flexible tool that is easy to get wrong                    |
-| User management, MFA, password reset  | One bootstrap HR account is enough for the assessment; listed as future work              |
+| User management, MFA                  | One bootstrap HR account is enough for the assessment; listed as future work              |
 
 ## Success criteria
 

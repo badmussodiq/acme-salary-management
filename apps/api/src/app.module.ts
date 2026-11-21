@@ -13,6 +13,7 @@ import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { EmployeesModule } from './employees/employees.module';
 import { HealthModule } from './health/health.module';
+import { MailModule } from './mail/mail.module';
 import { InsightsModule } from './insights/insights.module';
 import { SeedModule } from './seed/seed.module';
 import { StorageModule } from './storage/storage.module';
@@ -28,6 +29,7 @@ import { StorageModule } from './storage/storage.module';
     }),
     DatabaseModule,
     StorageModule,
+    MailModule,
     AuthModule,
     AuditModule,
     EmployeesModule,

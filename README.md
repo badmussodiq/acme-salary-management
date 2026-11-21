@@ -9,16 +9,20 @@ A web application for ACME's HR manager to manage salary data for 10,000 employe
 
 ## Run it
 
-Requirements: Node 24 or newer, pnpm 12, Docker (for PostgreSQL and the local S3 store).
+Requirements: Node 24 or newer, pnpm 12, Docker (for PostgreSQL, the local S3 store and the local mail catcher).
 
 ```bash
 pnpm install
-pnpm db:up          # PostgreSQL and RustFS from docker-compose-infra.yml
+pnpm db:up          # PostgreSQL, RustFS and Mailpit from docker-compose-infra.yml
 pnpm dev:api        # http://localhost:3001, migrates, creates the HR user and seeds 10,000 employees
 pnpm dev:web        # http://localhost:3000
 ```
 
-Open http://localhost:3000 and sign in with the development credentials in [.env.example](.env.example). To run everything in containers instead, use `docker compose up --build`. Nothing else needs to be run: migrations, the first account and the demo data all happen on start.
+Open http://localhost:3000 and sign in with the development credentials in [.env.example](.env.example). To run everything in containers instead, use `docker compose up --build`.
+
+**Email in development:** nothing is really sent. Every email, such as a password reset, lands in Mailpit, a local mail catcher with an inbox at http://localhost:8025. It starts with `pnpm db:up` and `docker compose up`.
+
+Nothing else needs to be run: migrations, the first account and the demo data all happen on start.
 
 ## Commands
 
@@ -36,6 +40,7 @@ Open http://localhost:3000 and sign in with the development credentials in [.env
 - **Employees and pay:** search, filter, sort and paginate the directory on the server; create and edit employees; add compensation as a dated history; strict validation everywhere.
 - **Insights:** headcount by country and department; pay mix; minimum, median, average and maximum **per currency and pay frequency, never mixed**; employees with no pay; unusual salaries.
 - **Profile pictures:** upload a JPEG, PNG or WebP (up to 2 MB) on an employee's page when S3 storage is configured; otherwise initials are shown.
+- **Passwords:** "Forgot your password?" on the sign-in page emails a signed reset link (valid 30 minutes, single use); signed-in users change their password under Settings (click your email in the header). Either way, other sessions are signed out.
 - **Audit:** every change records who, when, before and after; the log is append-only in the database.
 - **Security:** revocable sessions, per-user rate limits, a standard error envelope for 401, 403 and 429, nonce-based CSP, strict input validation, hardened containers.
 
@@ -61,6 +66,10 @@ Open http://localhost:3000 and sign in with the development credentials in [.env
 | `packages/web-utils` | Generic hooks and components shared by the web app  |
 | `deploy`             | Optional self-hosting: proxy, backups, restore      |
 | `.github/workflows`  | CI and CD                                           |
+
+## Email on hosted deployments
+
+Render and Vercel cannot run Mailpit. Point the API at any SMTP inbox with `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and `MAIL_FROM`; a capture-only inbox such as an Ethereal or Mailtrap sandbox needs no real mailbox. Without `SMTP_HOST` the API sends nothing and logs a warning, so the reset page still answers but no email arrives.
 
 ## Hosted demo
 

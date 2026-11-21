@@ -37,6 +37,16 @@ export interface AppConfig {
   readonly seedDemoData: boolean;
   readonly seedEmployeeCount: number;
   readonly s3: S3Settings | undefined;
+  readonly smtp: SmtpSettings | undefined;
+}
+
+export interface SmtpSettings {
+  readonly host: string;
+  readonly port: number;
+  readonly secure: boolean;
+  readonly user: string | undefined;
+  readonly password: string | undefined;
+  readonly from: string;
 }
 
 export interface S3Settings {
@@ -79,6 +89,12 @@ class RawEnvironment {
   @IsOptional() @IsString() @MinLength(3) @MaxLength(128) S3_ACCESS_KEY_ID?: string;
   @IsOptional() @IsString() @MinLength(8) @MaxLength(256) S3_SECRET_ACCESS_KEY?: string;
   @IsOptional() @IsIn(['true', 'false']) S3_FORCE_PATH_STYLE?: string;
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(253) SMTP_HOST?: string;
+  @Type(() => Number) @IsInt() @Min(1) @Max(65535) SMTP_PORT = 587;
+  @IsOptional() @IsIn(['true', 'false']) SMTP_SECURE?: string;
+  @IsOptional() @IsString() @MaxLength(256) SMTP_USER?: string;
+  @IsOptional() @IsString() @MaxLength(256) SMTP_PASSWORD?: string;
+  @IsString() @MinLength(3) @MaxLength(254) MAIL_FROM = 'ACME Salary <no-reply@acme.test>';
   @IsOptional() @IsEmail() INITIAL_HR_EMAIL?: string;
   @IsOptional() @IsString() @MinLength(12) @MaxLength(128) INITIAL_HR_PASSWORD?: string;
 }
@@ -110,6 +126,32 @@ const resolveS3 = (raw: RawEnvironment): S3Settings | undefined => {
     };
   }
   return raw.NODE_ENV === 'development' ? DEVELOPMENT_S3 : undefined;
+};
+
+const DEVELOPMENT_SMTP_HOST = 'localhost';
+const DEVELOPMENT_SMTP_PORT = 1025;
+
+const resolveSmtp = (raw: RawEnvironment): SmtpSettings | undefined => {
+  if (!raw.SMTP_HOST && raw.NODE_ENV === 'development') {
+    return {
+      host: DEVELOPMENT_SMTP_HOST,
+      port: DEVELOPMENT_SMTP_PORT,
+      secure: false,
+      user: undefined,
+      password: undefined,
+      from: raw.MAIL_FROM,
+    };
+  }
+  return raw.SMTP_HOST
+    ? {
+        host: raw.SMTP_HOST,
+        port: raw.SMTP_PORT,
+        secure: raw.SMTP_SECURE ? raw.SMTP_SECURE === 'true' : raw.SMTP_PORT === 465,
+        user: raw.SMTP_USER || undefined,
+        password: raw.SMTP_PASSWORD || undefined,
+        from: raw.MAIL_FROM,
+      }
+    : undefined;
 };
 
 const resolveInitialHr = (raw: RawEnvironment): InitialHr | undefined => {
@@ -162,5 +204,6 @@ export const loadAppConfig = (env: NodeJS.ProcessEnv): AppConfig => {
         : raw.SEED_DEMO_DATA === 'true',
     seedEmployeeCount: raw.SEED_EMPLOYEE_COUNT,
     s3: resolveS3(raw),
+    smtp: resolveSmtp(raw),
   };
 };

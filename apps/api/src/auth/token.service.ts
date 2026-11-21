@@ -4,10 +4,17 @@ import { APP_CONFIG, type AppConfig } from '../config/app-config';
 
 const ISSUER = 'acme-salary-management';
 const ALGORITHM = 'HS256';
+const RESET_AUDIENCE = 'password-reset';
+const RESET_TTL = '30m';
 
 export interface SessionClaims {
   readonly userId: string;
   readonly version: number;
+}
+
+export interface ResetClaims {
+  readonly userId: string;
+  readonly fingerprint: string;
 }
 
 @Injectable()
@@ -39,6 +46,33 @@ export class TokenService {
       const version = payload['ver'];
       return payload.sub && typeof version === 'number'
         ? { userId: payload.sub, version }
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  issueReset(userId: string, fingerprint: string): Promise<string> {
+    return new SignJWT({ fp: fingerprint })
+      .setProtectedHeader({ alg: ALGORITHM })
+      .setSubject(userId)
+      .setIssuer(ISSUER)
+      .setAudience(RESET_AUDIENCE)
+      .setIssuedAt()
+      .setExpirationTime(RESET_TTL)
+      .sign(this.key);
+  }
+
+  async verifyReset(token: string): Promise<ResetClaims | undefined> {
+    try {
+      const { payload } = await jwtVerify(token, this.key, {
+        issuer: ISSUER,
+        audience: RESET_AUDIENCE,
+        algorithms: [ALGORITHM],
+      });
+      const fingerprint = payload['fp'];
+      return payload.sub && typeof fingerprint === 'string'
+        ? { userId: payload.sub, fingerprint }
         : undefined;
     } catch {
       return undefined;

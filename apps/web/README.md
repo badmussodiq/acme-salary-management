@@ -10,13 +10,16 @@ pnpm dev:web   # http://localhost:3000, expects the API at API_ORIGIN (default h
 
 ## Layout
 
-| Path                       | Purpose                                                     |
-| -------------------------- | ----------------------------------------------------------- |
-| `src/app/(portal)`         | Dashboard, employee directory, profile, create and edit     |
-| `src/app/login`            | Sign-in                                                     |
-| `src/app/api/v1/[...path]` | Proxy to the API (100 KB body cap, 2 MB for avatar uploads) |
-| `src/components`           | Shared UI, including the initials avatar                    |
-| `src/proxy.ts`             | Session redirect and nonce-based CSP                        |
+| Path                        | Purpose                                                                     |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `src/app/(portal)`          | Dashboard, employee directory, profile, create and edit                     |
+| `src/app/login`             | Sign-in                                                                     |
+| `src/app/forgot-password`   | Request a password reset email                                              |
+| `src/app/reset-password`    | Choose a new password from the emailed link                                 |
+| `src/app/(portal)/settings` | Change password (signed in)                                                 |
+| `src/app/api/v1/[...path]`  | Proxy to the API (100 KB body cap, 2 MB for avatar uploads)                 |
+| `src/components`            | Shared UI, including the initials avatar                                    |
+| `src/proxy.ts`              | Session redirect (login and recovery pages stay public) and nonce-based CSP |
 
 ## Deploy
 

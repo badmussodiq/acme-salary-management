@@ -1,4 +1,4 @@
-# Local infrastructure: PostgreSQL and an S3-compatible store (RustFS).
+# Local infrastructure: PostgreSQL, an S3-compatible store (RustFS) and a mail catcher (Mailpit).
 name: acme-infra
 
 services:
@@ -29,6 +29,15 @@ services:
       - '9000:9000'
     volumes:
       - rustfs-data:/data
+
+  # Catches every outgoing email. Inbox UI on http://localhost:8025, SMTP on 1025.
+  mailpit:
+    image: axllent/mailpit:latest
+    environment:
+      MP_MAX_MESSAGES: 500
+    ports:
+      - '8025:8025'
+      - '1025:1025'
 
 volumes:
   postgres-data:

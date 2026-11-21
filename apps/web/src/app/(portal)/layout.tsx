@@ -23,7 +23,9 @@ const PortalLayout = async ({ children }: { readonly children: ReactNode }) => {
             </Link>
           </nav>
           <div className="flex items-center gap-3 text-sm text-slate-600">
-            <span>{user.email}</span>
+            <Link href="/settings" className="hover:text-slate-900">
+              {user.email}
+            </Link>
             <LogoutButton />
           </div>
         </div>

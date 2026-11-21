@@ -60,4 +60,17 @@ export class UsersRepository {
       .where('id', '=', id)
       .execute();
   }
+
+  async setPassword(id: string, passwordHash: string): Promise<void> {
+    await this.database.db
+      .updateTable('users')
+      .set((eb) => ({
+        password_hash: passwordHash,
+        session_version: eb('session_version', '+', 1),
+        failed_login_count: 0,
+        locked_until: null,
+      }))
+      .where('id', '=', id)
+      .execute();
+  }
 }

@@ -7,6 +7,7 @@ import request from 'supertest';
 import type TestAgent from 'supertest/lib/agent';
 import { AppModule } from '../../src/app.module';
 import { hashPassword } from '../../src/auth/password';
+import { MAILER, type Mailer, type MailMessage } from '../../src/mail/mailer';
 import { UsersRepository } from '../../src/auth/users.repository';
 import { APP_CONFIG, loadAppConfig, type AppConfig } from '../../src/config/app-config';
 import { configureApp } from '../../src/configure-app';
@@ -39,6 +40,7 @@ export interface IntegrationApp {
   readonly config: AppConfig;
   readonly database: DatabaseService;
   readonly users: UsersRepository;
+  readonly mailbox: MailMessage[];
   anonymous(): TestAgent;
   loginAgent(email?: string, password?: string): Promise<TestAgent>;
   reset(): Promise<void>;
@@ -65,9 +67,20 @@ export const startIntegrationApp = async (
     ...overrides,
   };
 
+  const mailbox: MailMessage[] = [];
+  const capturingMailer: Mailer = {
+    enabled: true,
+    send: (message) => {
+      mailbox.push(message);
+      return Promise.resolve();
+    },
+  };
+
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(APP_CONFIG)
     .useValue(config)
+    .overrideProvider(MAILER)
+    .useValue(capturingMailer)
     .compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>({ bodyParser: false });
   configureApp(app, config);
@@ -85,6 +98,7 @@ export const startIntegrationApp = async (
     config,
     database,
     users,
+    mailbox,
     anonymous,
     loginAgent: async (
       email = initialHr?.email ?? '',
